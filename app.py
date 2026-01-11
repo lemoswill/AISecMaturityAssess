@@ -405,11 +405,18 @@ if page == "Assessment":
                             except:
                                 score = 0
                         
+                        # AI Analysis data
+                        ai_data = st.session_state.get('ai_results', {}).get(unique_id, {})
+                        ai_justification = ai_data.get('justification', '')
+                        ai_sources = ", ".join(ai_data.get('sources', [])) if ai_data.get('sources') else ''
+
                         final_responses.append({
                             "category": func,
                             "question_id": control['id'],
                             "score": score,
-                            "notes": f"Mapped to {subcat_key}"
+                            "ai_justification": ai_justification,
+                            "ai_sources": ai_sources,
+                            "mapping": subcat_key
                         })
             
             # Calculate stats
