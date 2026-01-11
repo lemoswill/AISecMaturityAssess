@@ -1,5 +1,7 @@
-import streamlit as st
-import pandas as pd
+__import__('pysqlite3')
+import sys
+sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
+
 import streamlit as st
 import pandas as pd
 from modules import data, storage, ui, charts, evidence, ai_engine
