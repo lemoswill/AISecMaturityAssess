@@ -1,5 +1,7 @@
 __import__('pysqlite3')
 import sys
+import os
+import shutil
 sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import streamlit as st
@@ -228,11 +230,10 @@ if page == "Evidence Locker":
              if engine.reset_db():
                  st.success("Knowledge Base Wiped.")
                  # Also remove files
-                 import shutil
                  if os.path.exists(evidence.EVIDENCE_DIR):
                      shutil.rmtree(evidence.EVIDENCE_DIR)
                      os.makedirs(evidence.EVIDENCE_DIR)
-                 st.experimental_rerun()
+                 st.rerun()
     else:
         st.info("No documents indexed yet.")
 
