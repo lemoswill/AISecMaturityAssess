@@ -11,3 +11,4 @@ openai
 tiktoken
 sentence-transformers
 pysqlite3-binary
+matplotlib
