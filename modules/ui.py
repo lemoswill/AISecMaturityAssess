@@ -118,15 +118,15 @@ def load_custom_css():
                 color: #0F172A !important;
                 font-family: 'Plus Jakarta Sans', sans-serif !important;
                 font-weight: 800 !important;
-                font-size: 2.4rem !important;
-                letter-spacing: -0.05em !important;
+                font-size: 1.8rem !important;
+                letter-spacing: -0.04em !important;
             }
             [data-testid="stMetricLabel"] {
                 color: #64748B !important;
                 font-weight: 700 !important;
                 text-transform: uppercase !important;
-                font-size: 0.8rem !important;
-                letter-spacing: 0.12em !important;
+                font-size: 0.75rem !important;
+                letter-spacing: 0.1em !important;
             }
 
             /* === PROGRESS BAR (Glowing Gradient) === */
@@ -136,9 +136,9 @@ def load_custom_css():
             }
 
             /* === TYPOGRAPHY === */
-            h1 { font-size: 2.8rem !important; font-weight: 800 !important; letter-spacing: -0.05em !important; color: #0F172A; }
-            h2 { font-size: 1.8rem !important; font-weight: 700 !important; letter-spacing: -0.03em !important; color: #1E293B; }
-            h3 { font-size: 1.4rem !important; font-weight: 700 !important; color: #334155; }
+            h1 { font-size: 1.6rem !important; font-weight: 800 !important; letter-spacing: -0.04em !important; color: #0F172A; }
+            h2 { font-size: 1.3rem !important; font-weight: 700 !important; letter-spacing: -0.02em !important; color: #1E293B; }
+            h3 { font-size: 1.1rem !important; font-weight: 700 !important; color: #334155; }
             
             /* Mono Font for citations/technical data */
             .mono-text {
