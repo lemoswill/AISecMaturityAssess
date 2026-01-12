@@ -80,3 +80,34 @@ def get_assessment_details(assessment_id):
     df = pd.read_sql_query("SELECT * FROM responses WHERE assessment_id = ?", conn, params=(assessment_id,))
     conn.close()
     return df
+
+def delete_assessment(assessment_id):
+    """Delete an assessment and its associated responses."""
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    try:
+        c.execute("DELETE FROM responses WHERE assessment_id = ?", (assessment_id,))
+        c.execute("DELETE FROM assessments WHERE id = ?", (assessment_id,))
+        conn.commit()
+        return True
+    except Exception as e:
+        print(f"Error deleting assessment: {e}")
+        return False
+    finally:
+        conn.close()
+
+def delete_assessments_by_name(name_substring):
+    """Delete all assessments whose project name contains the substring."""
+    conn = sqlite3.connect(DB_FILE)
+    c = conn.cursor()
+    try:
+        c.execute("SELECT id FROM assessments WHERE project_name LIKE ?", (f"%{name_substring}%",))
+        ids = [row[0] for row in c.fetchall()]
+        for aid in ids:
+            delete_assessment(aid)
+        return len(ids)
+    except Exception as e:
+        print(f"Error deleting assessments by name: {e}")
+        return 0
+    finally:
+        conn.close()
