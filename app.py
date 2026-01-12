@@ -28,14 +28,20 @@ if 'ai_results' not in st.session_state:
 
 # --- Sidebar ---
 st.sidebar.markdown("""
-<div style="text-align: center; padding: 1.5rem 0 1.5rem 0; border-bottom: 2px solid #E2E8F0; margin-bottom: 1.5rem;">
-    <svg width="56" height="56" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style="margin-bottom: 12px;">
-        <path d="M12 2L3 7V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V7L12 2Z" 
-              stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="#0066CC" fill-opacity="0.1"/>
-        <path d="M9 12L11 14L15 10" stroke="#0066CC" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    <h2 style="color: #0F172A; margin: 0; font-size: 1.2rem; font-weight: 700; letter-spacing: -0.02em;">AI Security</h2>
-    <p style="color: #64748B; margin: 6px 0 0 0; font-size: 0.8rem; font-weight: 500;">Maturity Assessment Platform</p>
+<div style="text-align: center; padding: 2rem 0 1.5rem 0; border-bottom: 1px solid #F1F5F9; margin-bottom: 2rem;">
+    <div style="background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%); 
+                width: 60px; height: 60px; border-radius: 16px; 
+                display: flex; align-items: center; justify-content: center; 
+                margin: 0 auto 16px auto; 
+                box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M12 2L3 7V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V7L12 2Z" 
+                  stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.2"/>
+            <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+    </div>
+    <h1 style="color: #0F172A; margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;">Silicon Precision</h1>
+    <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">AI Governance OS</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -122,114 +128,96 @@ if page == "Evidence Locker":
     ui.display_header("Evidence Locker", "Upload documents to enable AI Auto-Assessment")
     
     # 1. AI Provider Configuration
-    st.markdown("### 🤖 AI Provider")
+    st.markdown("""<div class="glass-card" style="padding: 2rem; margin-top: 1rem; border-left: 6px solid #4F46E5 !important;">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <div style="background: rgba(79, 70, 229, 0.1); padding: 10px; border-radius: 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4F46E5" stroke-width="2.5"><path d="M12 2a10 10 0 100 20 10 10 0 000-20zM12 11V7m0 10v-4"/></svg>
+            </div>
+            <h3 style="margin: 0;">Intelligence Provider</h3>
+        </div>
+    """, unsafe_allow_html=True)
     
-    # Initialize session state for provider settings if not exists
-    if 'provider_keys' not in st.session_state:
-        st.session_state['provider_keys'] = {}
-    if 'provider_models' not in st.session_state:
-        st.session_state['provider_models'] = {}
-
+    # Provider Settings
     provider_options = ["OpenAI", "Gemini", "Perplexity", "Ollama (Local)"]
-    provider_selected = st.selectbox("Select Intelligence Provider", provider_options, index=0)
+    provider_selected = st.selectbox("Intelligence Core", provider_options, index=0)
     provider_clean = provider_selected.split(" (")[0]
     st.session_state['ai_provider'] = provider_clean
     
-    current_key = st.session_state['provider_keys'].get(provider_clean, "")
-    current_model = st.session_state['provider_models'].get(provider_clean, "")
+    current_key = st.session_state.get('provider_keys', {}).get(provider_clean, "")
+    current_model = st.session_state.get('provider_models', {}).get(provider_clean, "")
 
     if provider_clean == "Ollama":
         col1, col2 = st.columns([2, 3])
         with col1:
-            ollama_host = st.text_input("Ollama Host URL", value=current_key if current_key else "http://localhost:11434", placeholder="e.g. http://localhost:11434")
+            ollama_host = st.text_input("Ollama Host URL", value=current_key if current_key else "http://localhost:11434")
             st.session_state['provider_keys'][provider_clean] = ollama_host
-            
-            # Fetch local models automatically
+        with col2:
             engine = ai_engine.get_engine()
             local_models = engine.list_local_models(ollama_host)
-            
-        with col2:
             if local_models:
-                # Use selectbox if models are found
                 index = 0
-                if current_model in local_models:
-                    index = local_models.index(current_model)
-                elif "deepseek-r1" in local_models:
-                    index = local_models.index("deepseek-r1")
-                
+                if current_model in local_models: index = local_models.index(current_model)
                 ollama_model = st.selectbox("Select Local Model", local_models, index=index)
                 st.session_state['provider_models'][provider_clean] = ollama_model
-                
-                if st.button("🔄 Refresh Model List"):
-                    st.rerun()
             else:
-                # Fallback to text input if no connection or no models
-                st.warning("Could not list local models. Is Ollama running?")
                 ollama_model = st.text_input("Model Name (Manual)", value=current_model if current_model else "deepseek-r1")
                 st.session_state['provider_models'][provider_clean] = ollama_model
-                
-                if st.button("🔌 Try Reconnect"):
-                    st.rerun()
-        
-        st.info("💡 Ensure Ollama is running (`ollama serve`) and you have the model pulled (e.g., `ollama pull deepseek-r1`).")
     else:
         col1, col2 = st.columns(2)
         with col1:
-            help_text = "Required for Auto-Assessment"
-            if provider_clean == "Gemini": help_text = "Get from Google AI Studio"
-            elif provider_clean == "Perplexity": help_text = "Get from perplexity.ai/api"
-            
-            new_key = st.text_input(f"{provider_clean} API Key", value=current_key, type="password", help=help_text)
+            new_key = st.text_input(f"{provider_clean} API Key", value=current_key, type="password")
             st.session_state['provider_keys'][provider_clean] = new_key
-            # Legacy support for some modules
             st.session_state['api_key'] = new_key
         with col2:
             default_model = "gpt-3.5-turbo" if provider_clean == "OpenAI" else "gemini-pro" if provider_clean == "Gemini" else "sonar"
-            new_model = st.text_input("Model Name (Optional)", value=current_model if current_model else default_model)
+            new_model = st.text_input("Model Name", value=current_model if current_model else default_model)
             st.session_state['provider_models'][provider_clean] = new_model
-
-    if not st.session_state['provider_keys'].get(provider_clean):
-        st.warning(f"Please provide configuration for {provider_clean}.")
-        
+    
+    st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
     
     # 2. File Upload
-    st.markdown("### 📂 Document Ingestion")
-    st.info("Upload Policies, Architecture Diagrams (PDF), Playbooks, or Interview Transcripts.")
+    st.markdown("""<div class="glass-card" style="padding: 2rem; border-left: 6px solid #2563EB !important;">
+        <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 20px;">
+            <div style="background: rgba(37, 99, 235, 0.1); padding: 10px; border-radius: 12px;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+            </div>
+            <h3 style="margin: 0;">Document Ingestion</h3>
+        </div>
+        <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 1.5rem;">Supply security policies, architecture reviews, or audit logs to fuel the AI analysis.</p>
+    """, unsafe_allow_html=True)
     
-    uploaded_files = st.file_uploader("Upload Evidence", type=['pdf', 'txt', 'md'], accept_multiple_files=True)
+    uploaded_files = st.file_uploader("Drop PDF/Text files here", type=['pdf', 'txt', 'md'], accept_multiple_files=True, label_visibility="collapsed")
     
     if uploaded_files:
-        if st.button(f"Process {len(uploaded_files)} Files"):
-            with st.spinner("Encrypting and Indexing documents..."):
+        if st.button(f"⚡ Index {len(uploaded_files)} Resources", type="primary"):
+            with st.spinner("Processing Intelligence..."):
                 engine = ai_engine.get_engine()
-                # Clear old DB to avoid duplicates or manage incrementally?
-                # For this demo, let's keep it incremental or allow reset.
-                
                 for up_file in uploaded_files:
                     saved_path = evidence.save_uploaded_file(up_file)
                     if saved_path:
-                        success, fast_msg = engine.ingest_file(up_file.name)
-                        if success:
-                            st.success(f"Indexed: {up_file.name}")
-                        else:
-                            st.error(f"Failed {up_file.name}: {fast_msg}")
-                            
-            st.success("Ingestion Complete! You can now use Auto-Assess in the Assessment tab.")
+                        success, _ = engine.ingest_file(up_file.name)
+            st.success("Indexing Complete!")
+            st.rerun()
             
-    # 3. View Index
+    st.markdown("</div>", unsafe_allow_html=True)
     st.divider()
-    st.markdown("### 📚 Indexed Knowledge Base")
+    
+    # 3. View Index
+    st.markdown("### 📚 Intelligence Assets")
     files = evidence.list_evidence_files()
     if files:
         for f in files:
-            st.text(f"📄 {f}")
+            st.markdown(f"""
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                    <span style="color: #334155; font-size: 0.9rem; font-weight: 500;">{f}</span>
+                </div>
+            """, unsafe_allow_html=True)
         
-        if st.button("🗑️ Reset Knowledge Base", type="primary"):
+        if st.button("🗑️ Wipe Knowledge Base", type="secondary"):
              engine = ai_engine.get_engine()
              if engine.reset_db():
-                 st.success("Knowledge Base Wiped.")
-                 # Also remove files
                  if os.path.exists(evidence.EVIDENCE_DIR):
                      shutil.rmtree(evidence.EVIDENCE_DIR)
                      os.makedirs(evidence.EVIDENCE_DIR)
@@ -240,32 +228,24 @@ if page == "Evidence Locker":
 if page == "Assessment":
     ui.display_header("AI Security Maturity Assessment", "NIST AI RMF mapped to CSA AICM Controls")
     
-    # --- Enterprise Intelligence Hero Section ---
+    # --- Silicon Precision Hero Section ---
     st.markdown("""
-    <div style="background: linear-gradient(135deg, #FFFFFF 0%, #F8FAFC 100%); 
-                padding: 2rem 2.5rem; 
-                border-radius: 12px; 
-                margin-bottom: 2rem;
-                border: 2px solid #E2E8F0;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-                border-left: 6px solid #0066CC;">
-        <div style="display: flex; align-items: center; gap: 20px;">
-            <div style="background: linear-gradient(135deg, #0066CC 0%, #3B82F6 100%); 
-                        padding: 15px; 
-                        border-radius: 12px;
-                        box-shadow: 0 4px 6px rgba(0, 102, 204, 0.2);">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <div class="glass-card" style="padding: 2.5rem; margin-top: 1rem; border-left: 8px solid #2563EB !important;">
+        <div style="display: flex; align-items: center; gap: 24px;">
+            <div style="background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%); 
+                        padding: 18px; 
+                        border-radius: 14px;
+                        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2L3 7V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V7L12 2Z" 
-                          stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.2"/>
-                    <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                          stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.15"/>
+                    <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
             <div style="flex: 1;">
-                <h2 style="color: #0F172A; margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em;">
-                    Security Intelligence Platform
-                </h2>
-                <p style="color: #475569; margin: 6px 0 0 0; font-size: 0.95rem; font-weight: 500; line-height: 1.5;">
-                    Automated compliance assessment across <strong style="color: #1E3A8A;">NIST AI RMF</strong> and <strong style="color: #1E3A8A;">CSA AICM</strong> frameworks
+                <h1 style="color: #0F172A; margin: 0; font-size: 1.8rem;">Silicon Precision</h1>
+                <p style="color: #64748B; margin: 4px 0 0 0; font-size: 1rem; font-weight: 500;">
+                    AI Governance & Maturity Platform • <span style="color: #2563EB;">NIST AI RMF</span> × <span style="color: #4F46E5;">CSA AICM</span>
                 </p>
             </div>
         </div>
@@ -279,45 +259,117 @@ if page == "Assessment":
     if not has_evidence:
         st.warning("⚠️ **No evidence uploaded yet.** Please upload your security documentation in the Evidence Locker to enable AI assessment.")
     else:
-        st.success(f"✅ **Evidence Ready** - {len(files)} document(s) indexed")
+        st.success(f"✅ **Intelligence Engine Online** - {len(files)} document(s) indexed")
         
-        # Domain Selector
-        st.markdown("**Select domain to analyze:**")
+        # --- AI Command Center Trigger ---
         available_domains = list(data.NIST_FUNCTIONS.keys())
         
-        col1, col2 = st.columns([3, 1])
-        with col1:
+        col_dom, col_act = st.columns([3, 1])
+        with col_dom:
             selected_domain = st.selectbox(
-                "Choose NIST Function",
+                "Choose NIST Function to Analyze",
                 available_domains,
                 format_func=lambda x: f"{x} - {data.NIST_FUNCTIONS[x]}",
                 label_visibility="collapsed"
             )
         
-        with col2:
-            # Check if API key exists
+        with col_act:
             current_provider = st.session_state.get('ai_provider', 'OpenAI')
             provider_keys = st.session_state.get('provider_keys', {})
             active_key = provider_keys.get(current_provider, st.session_state.get('api_key') if current_provider == 'OpenAI' else None)
             
             if active_key:
                 if st.button(f"🚀 Analyze {selected_domain}", type="primary", use_container_width=True):
-                    # Trigger bulk assessment for selected domain
                     st.session_state['trigger_bulk_assess'] = selected_domain
                     st.rerun()
             else:
-                st.button("🔑 Configure AI Key", type="secondary", use_container_width=True, disabled=True)
-                st.caption("⚠️ Set API key in Evidence Locker")
-    
+                st.button("🔑 Key Required", type="secondary", use_container_width=True, disabled=True)
     
     st.markdown("---")
+
+    # --- Maturity Journey (Phase Tracker) ---
+    st.markdown("""<h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+        Maturity Journey Phase
+    </h3>""", unsafe_allow_html=True)
     
-    # --- Wave Filter (MUST be before progress calculation) ---
-    st.sidebar.markdown("### 🌊 Maturity Phase")
-    wave_options = ["All Waves"] + list(data.MATURITY_WAVES.values())
-    selected_wave_label = st.sidebar.selectbox("Filter by Phase:", wave_options, index=1) # Default to Wave 1
+    wave_names = list(data.MATURITY_WAVES.values())
+    wave_options = ["All Waves"] + wave_names
     
-    # Store in session state for progress calculation
+    # Custom CSS for the Phase Tracker
+    st.markdown("""
+        <style>
+            .phase-tracker {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 2rem;
+                position: relative;
+                padding: 0 10px;
+            }
+            .phase-tracker::before {
+                content: '';
+                position: absolute;
+                top: 15px;
+                left: 5%;
+                right: 5%;
+                height: 2px;
+                background: #E2E8F0;
+                z-index: 1;
+            }
+            .phase-step {
+                position: relative;
+                z-index: 2;
+                background: #F8FAFC;
+                padding: 0 10px;
+                text-align: center;
+                cursor: pointer;
+                transition: all 0.3s ease;
+            }
+            .phase-node {
+                width: 32px;
+                height: 32px;
+                border-radius: 50%;
+                background: #FFFFFF;
+                border: 2px solid #E2E8F0;
+                margin: 0 auto 8px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 0.8rem;
+                font-weight: 700;
+                color: #94A3B8;
+                transition: all 0.3s ease;
+            }
+            .phase-active .phase-node {
+                background: #2563EB;
+                border-color: #2563EB;
+                color: #FFFFFF;
+                box-shadow: 0 0 12px rgba(37, 99, 235, 0.4);
+            }
+            .phase-active .phase-label {
+                color: #2563EB;
+                font-weight: 700;
+            }
+            .phase-label {
+                font-size: 0.8rem;
+                color: #64748B;
+                font-weight: 600;
+            }
+        </style>
+    """, unsafe_allow_html=True)
+
+    # Use a native selectbox for functionality but style it as a phase tracker? 
+    # Or just use the selectbox styled nicely. Let's stick to a clean selectbox for now but place it prominently.
+    
+    col_wave, _ = st.columns([1, 2])
+    with col_wave:
+        selected_wave_label = st.selectbox(
+            "Current Phase",
+            wave_options,
+            index=1, # Default to Wave 1
+            label_visibility="collapsed"
+        )
+    
     st.session_state['wave_filter'] = selected_wave_label
     
     if selected_wave_label == "All Waves":
@@ -541,15 +593,24 @@ if page == "Assessment":
             st.markdown(f"### {func}: {data.NIST_FUNCTIONS.get(func, '')}")
             
             # --- Bulk Auto-Assess ---
-            # Check for API Key
             current_provider = st.session_state.get('ai_provider', 'OpenAI')
             provider_keys = st.session_state.get('provider_keys', {})
             active_key = provider_keys.get(current_provider, st.session_state.get('api_key') if current_provider == 'OpenAI' else None)
             
             if active_key:
-                 if st.button(f"✨ Auto-Assess All ({func})", key=f"bulk_{func}", type="secondary", help=f"Deep analysis of all '{func}' requirements using {current_provider}"):
+                 st.markdown(f"""
+                 <div style="background: rgba(37, 99, 235, 0.05); border: 1px dashed rgba(37, 99, 235, 0.3); border-radius: 12px; padding: 1.2rem; margin-bottom: 1.5rem;">
+                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#2563EB" stroke-width="2.5"><path d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                        <strong style="color: #1E293B;">AI Command Center</strong>
+                     </div>
+                     <p style="font-size: 0.85rem; color: #64748B; margin-bottom: 1rem;">Analyze all visible requirements in this domain using {current_provider}.</p>
+                 </div>
+                 """, unsafe_allow_html=True)
+                 
+                 if st.button(f"✨ Auto-Assess All ({func})", key=f"bulk_{func}", type="primary"):
                     
-                    # Gather controls first to know total
+                    # Gather controls
                     target_controls = []
                     subcats_bulk = data.ASSESSMENT_DATA[func]
                     for sk, sd in subcats_bulk.items():
@@ -569,55 +630,35 @@ if page == "Assessment":
                         provider_models = st.session_state.get('provider_models', {})
                         active_model = provider_models.get(current_provider)
                         
-                        for idx, ctrl in enumerate(target_controls):
-                            status_text.text(f"Analyzing {idx+1}/{len(target_controls)}: {ctrl['id']}...")
-                            
-                        # Retry loop with correct key access
                         count = 0
                         for sk, sd in subcats_bulk.items():
                             c_list = sd.get('csa_controls', [])
-                            # Filter
                             valid_c = [c for c in c_list if (selected_wave_id is None) or (c.get('wave', 2) == selected_wave_id)]
                             
                             for c in valid_c:
                                 count += 1
-                                status_text.text(f"Analyzing {count}/{len(target_controls)}: {c['id']} - {c['text'][:50]}...")
+                                status_text.markdown(f"<span class='mono-text'>[{count}/{len(target_controls)}] Analyzing: {c['id']}</span>", unsafe_allow_html=True)
                                 progress_bar.progress(count / len(target_controls))
                                 
                                 unique_id = f"score_{sk}_{c['id']}"
                                 
-                                # Call AI
                                 try:
-                                    res = engine.assess_control(
-                                        c['text'], 
-                                        c.get('help', ''), 
-                                        active_key,
-                                        provider=current_provider,
-                                        model_name=active_model
-                                    )
+                                    res = engine.assess_control(c['text'], c.get('help', ''), active_key, provider=current_provider, model_name=active_model)
                                     st.session_state['ai_results'][unique_id] = res
                                     if 'score' in res and isinstance(res['score'], int):
                                         st.session_state['responses'][unique_id] = res['score']
-                                        
-                                        # Update Widget State (Label)
                                         options = ["Not Implemented (0)", "Initial (1)", "Defined (2)", "Managed (3)", "Measured (4)", "Optimized (5)"]
-                                        safe_idx = max(0, min(5, res['score']))
-                                        st.session_state[unique_id] = options[safe_idx]
+                                        st.session_state[unique_id] = options[max(0, min(5, res['score']))]
                                 except Exception as e:
                                     print(f"Error assessing {c['id']}: {e}")
                                     
-                        status_text.text("✅ Analysis Complete!")
+                        status_text.success("✅ Analysis Complete!")
                         progress_bar.empty()
                         st.rerun()
             
             st.divider()
-            
-            st.divider()
 
             subcats = data.ASSESSMENT_DATA[func]
-            function_total_score = 0
-            has_visible_controls = False
-            
             for subcat_key, subcat_data in subcats.items():
                 csa_controls = subcat_data.get('csa_controls', [])
                 
@@ -630,38 +671,29 @@ if page == "Assessment":
                 if not visible_controls:
                     continue
                     
-                has_visible_controls = True
-                
-                # Calculate current subcat score
+                # Calculate subcat avg score
                 current_subcat_total = 0
                 for c in visible_controls:
-                    # Use unique key including subcat
                     unique_id = f"score_{subcat_key}_{c['id']}"
                     val = st.session_state.get(unique_id, 0)
-                    
                     score = 0
-                    if isinstance(val, int):
-                        score = val
+                    if isinstance(val, int): score = val
                     elif isinstance(val, str):
-                        # Extract number from "Label (N)"
-                        try:
-                            score = int(val.split('(')[-1].strip(')'))
-                        except:
-                            score = 0
+                        try: score = int(val.split('(')[-1].strip(')'))
+                        except: score = 0
+                    current_subcat_total += score
                             
                 subcat_avg = current_subcat_total / len(visible_controls) if visible_controls else 0
                 
-                # Using a static label (no dynamic score in header) to prevent auto-closing in all Streamlit versions
                 with st.expander(f"{subcat_key}"):
                     # Professional sub-header for scores
                     st.markdown(f"""
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <span style="color: #64748B; font-size: 0.9rem; font-weight: 500;">Current Maturity:</span>
-                            <span style="color: #1E3A8A; font-weight: 700; font-size: 1.1rem;">{subcat_avg:.1f} / 5.0</span>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: #F8FAFC; padding: 10px 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
+                            <span style="color: #64748B; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Subcategory Maturity</span>
+                            <span style="color: #2563EB; font-weight: 800; font-size: 1.1rem;">{subcat_avg:.1f} / 5.0</span>
                         </div>
+                        <p style="color: #475569; font-style: italic; font-size: 0.95rem; margin-bottom: 1.5rem;">{subcat_data['description']}</p>
                     """, unsafe_allow_html=True)
-                    
-                    st.markdown(f"_{subcat_data['description']}_")
                     st.divider()
                     
                     for control in visible_controls:
@@ -738,16 +770,25 @@ elif page == "History & Dashboard":
             
             category_scores = details_df.groupby('category')['score'].mean().to_dict()
             
-            # Overview Metrics
+            # Overview Metrics (Glass Cards)
             sel_row = df[df['id'] == selected_id].iloc[0]
             
-            with st.container():
-                col1, col2, col3 = st.columns(3)
-                col1.metric("Project Name", sel_row['project_name'])
-                col2.metric("Total Score", f"{sel_row['total_score']:.2f} / 5.0")
-                col3.metric("Maturity Level", sel_row['maturity_level'])
-                
-            st.divider()
+            st.markdown(f"""
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
+                    <div class="glass-card" style="margin-bottom: 0;">
+                        <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0;">Project Name</p>
+                        <h2 style="color: #0F172A; margin: 0; font-size: 1.5rem;">{sel_row['project_name']}</h2>
+                    </div>
+                    <div class="glass-card" style="margin-bottom: 0; border-left: 5px solid #2563EB !important;">
+                        <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0;">Total Maturity</p>
+                        <h2 style="color: #2563EB; margin: 0; font-size: 1.5rem;">{sel_row['total_score']:.2f} <span style="font-size: 0.9rem; color: #94A3B8;">/ 5.0</span></h2>
+                    </div>
+                    <div class="glass-card" style="margin-bottom: 0; border-left: 5px solid #10B981 !important;">
+                        <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0;">Maturity Level</p>
+                        <h2 style="color: #10B981; margin: 0; font-size: 1.5rem;">{sel_row['maturity_level']}</h2>
+                    </div>
+                </div>
+            """, unsafe_allow_html=True)
             
             # Charts
             col_chart1, col_chart2 = st.columns([1, 1])
