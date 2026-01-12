@@ -278,11 +278,6 @@ if page == "Assessment":
     
     if not has_evidence:
         st.warning("⚠️ **No evidence uploaded yet.** Please upload your security documentation in the Evidence Locker to enable AI assessment.")
-        col1, col2, col3 = st.columns([1, 2, 1])
-        with col2:
-            if st.button("📂 Go to Evidence Locker", type="primary", use_container_width=True):
-                st.session_state['navigate_to'] = 'Evidence Locker 🧠'
-                st.rerun()
     else:
         st.success(f"✅ **Evidence Ready** - {len(files)} document(s) indexed")
         
