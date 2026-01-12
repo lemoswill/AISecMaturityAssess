@@ -25,6 +25,10 @@ if 'responses' not in st.session_state:
     st.session_state['responses'] = {}
 if 'ai_results' not in st.session_state:
     st.session_state['ai_results'] = {}
+if 'provider_keys' not in st.session_state:
+    st.session_state['provider_keys'] = {}
+if 'provider_models' not in st.session_state:
+    st.session_state['provider_models'] = {}
 
 # --- Sidebar ---
 st.sidebar.markdown("""
