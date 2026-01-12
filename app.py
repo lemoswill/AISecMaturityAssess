@@ -28,20 +28,20 @@ if 'ai_results' not in st.session_state:
 
 # --- Sidebar ---
 st.sidebar.markdown("""
-<div style="text-align: center; padding: 2rem 0 1.5rem 0; border-bottom: 1px solid #F1F5F9; margin-bottom: 2rem;">
+<div style="text-align: center; padding: 1.5rem 0 1rem 0; border-bottom: 1px solid #F1F5F9; margin-bottom: 1.5rem;">
     <div style="background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%); 
-                width: 60px; height: 60px; border-radius: 16px; 
+                width: 45px; height: 45px; border-radius: 12px; 
                 display: flex; align-items: center; justify-content: center; 
-                margin: 0 auto 16px auto; 
-                box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2);">
-        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                margin: 0 auto 12px auto; 
+                box-shadow: 0 8px 16px rgba(37, 99, 235, 0.15);">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2L3 7V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V7L12 2Z" 
                   stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.2"/>
             <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
-    <h1 style="color: #0F172A; margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;">AI Security</h1>
-    <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">Silicon Precision Edition</p>
+    <h1 style="color: #0F172A; margin: 0; font-size: 0.95rem; font-weight: 800; letter-spacing: -0.01em;">AI Security</h1>
+    <p style="color: #94A3B8; margin: 2px 0 0 0; font-size: 0.65rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em;">Precision Edition</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -230,22 +230,22 @@ if page == "Assessment":
     
     # --- Silicon Precision Hero Section ---
     st.markdown("""
-    <div class="glass-card" style="padding: 2.5rem; margin-top: 1rem; border-left: 8px solid #2563EB !important;">
-        <div style="display: flex; align-items: center; gap: 24px;">
+    <div class="glass-card" style="padding: 1.5rem; margin-top: 1rem; border-left: 6px solid #2563EB !important;">
+        <div style="display: flex; align-items: center; gap: 20px;">
             <div style="background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%); 
-                        padding: 18px; 
-                        border-radius: 14px;
-                        box-shadow: 0 10px 25px rgba(37, 99, 235, 0.25);">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        padding: 12px; 
+                        border-radius: 12px;
+                        box-shadow: 0 8px 15px rgba(37, 99, 235, 0.2);">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                     <path d="M12 2L3 7V11C3 16.55 6.84 21.74 12 23C17.16 21.74 21 16.55 21 11V7L12 2Z" 
                           stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="white" fill-opacity="0.15"/>
                     <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
             </div>
             <div style="flex: 1;">
-                <h1 style="color: #0F172A; margin: 0; font-size: 1.8rem;">AI Security Maturity</h1>
-                <p style="color: #64748B; margin: 4px 0 0 0; font-size: 1rem; font-weight: 500;">
-                    Governance & Engineering Platform • <span style="color: #2563EB;">Silicon Precision Edition</span>
+                <h1 style="color: #0F172A; margin: 0; font-size: 1.4rem;">AI Security Maturity</h1>
+                <p style="color: #64748B; margin: 4px 0 0 0; font-size: 0.9rem; font-weight: 500;">
+                    Automated Assessment Across NIST AI RMF and CSA AICM Frameworks.
                 </p>
             </div>
         </div>
