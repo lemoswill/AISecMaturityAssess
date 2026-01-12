@@ -182,8 +182,6 @@ def load_custom_css():
             }
         </style>
     """, unsafe_allow_html=True)
-        </style>
-    """, unsafe_allow_html=True)
 
 def display_header(title, subtitle=""):
     st.markdown(f"""
