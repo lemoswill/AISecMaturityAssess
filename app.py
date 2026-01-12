@@ -40,8 +40,8 @@ st.sidebar.markdown("""
             <path d="M9 12L11 14L15 10" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
         </svg>
     </div>
-    <h1 style="color: #0F172A; margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;">Silicon Precision</h1>
-    <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">AI Governance OS</p>
+    <h1 style="color: #0F172A; margin: 0; font-size: 1.1rem; font-weight: 800; letter-spacing: -0.01em;">AI Security</h1>
+    <p style="color: #94A3B8; margin: 4px 0 0 0; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.1em;">Silicon Precision Edition</p>
 </div>
 """, unsafe_allow_html=True)
 
@@ -243,9 +243,9 @@ if page == "Assessment":
                 </svg>
             </div>
             <div style="flex: 1;">
-                <h1 style="color: #0F172A; margin: 0; font-size: 1.8rem;">Silicon Precision</h1>
+                <h1 style="color: #0F172A; margin: 0; font-size: 1.8rem;">AI Security Maturity</h1>
                 <p style="color: #64748B; margin: 4px 0 0 0; font-size: 1rem; font-weight: 500;">
-                    AI Governance & Maturity Platform • <span style="color: #2563EB;">NIST AI RMF</span> × <span style="color: #4F46E5;">CSA AICM</span>
+                    Governance & Engineering Platform • <span style="color: #2563EB;">Silicon Precision Edition</span>
                 </p>
             </div>
         </div>
@@ -659,6 +659,9 @@ if page == "Assessment":
             st.divider()
 
             subcats = data.ASSESSMENT_DATA[func]
+            function_total_score = 0
+            has_visible_controls = False
+            
             for subcat_key, subcat_data in subcats.items():
                 csa_controls = subcat_data.get('csa_controls', [])
                 
@@ -671,6 +674,8 @@ if page == "Assessment":
                 if not visible_controls:
                     continue
                     
+                has_visible_controls = True
+                
                 # Calculate subcat avg score
                 current_subcat_total = 0
                 for c in visible_controls:
@@ -684,6 +689,7 @@ if page == "Assessment":
                     current_subcat_total += score
                             
                 subcat_avg = current_subcat_total / len(visible_controls) if visible_controls else 0
+                function_total_score += subcat_avg
                 
                 with st.expander(f"{subcat_key}"):
                     # Professional sub-header for scores
@@ -738,8 +744,6 @@ if page == "Assessment":
             
             if not has_visible_controls:
                 st.warning(f"No requirements for **{selected_wave_label}** in this category.")
-                
-                function_total_score += subcat_avg
             
             # Rollup for Function (just for internal calculation, not saving this directly)
             nist_function_scores[func] = function_total_score / len(subcats) if subcats else 0
