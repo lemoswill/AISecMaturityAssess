@@ -8,10 +8,9 @@ def load_custom_css():
             @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
             
-            /* Hide Streamlit Branding */
+            /* Hide Main Menu (Hamburger) */
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
-            header {visibility: hidden;}
             
             /* Main App Container */
             html, body, [data-testid="stAppViewContainer"] {
@@ -25,10 +24,6 @@ def load_custom_css():
                 padding-top: 1rem !important;
                 padding-bottom: 5rem !important;
                 max-width: 92% !important;
-            }
-            
-            [data-testid="stHeader"] {
-                display: none;
             }
             
             /* === GLASS ELEMENTS === */
