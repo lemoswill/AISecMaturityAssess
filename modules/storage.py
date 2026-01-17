@@ -6,25 +6,42 @@ import os
 DB_FILE = "maturity.db"
 
 def init_db():
-    """Initialize the SQLite database."""
+    """Initialize the SQLite database and handle schema updates."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
     
-    # Create Assessments table
+    # Create Assessments table with new columns if creating from scratch
     c.execute('''
         CREATE TABLE IF NOT EXISTS assessments (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             timestamp TEXT,
             project_name TEXT,
             total_score REAL,
-            maturity_level TEXT
+            maturity_level TEXT,
+            scope TEXT DEFAULT 'org',
+            project_type TEXT DEFAULT 'none'
         )
     ''')
     
+    # Check for existing columns to handle migration for existing DBs
+    c.execute("PRAGMA table_info(assessments)")
+    columns = [info[1] for info in c.fetchall()]
+    
+    if 'scope' not in columns:
+        print("Migrating DB: Adding 'scope' column")
+        try:
+            c.execute("ALTER TABLE assessments ADD COLUMN scope TEXT DEFAULT 'org'")
+        except Exception as e:
+            print(f"Migration error (scope): {e}")
+
+    if 'project_type' not in columns:
+        print("Migrating DB: Adding 'project_type' column")
+        try:
+            c.execute("ALTER TABLE assessments ADD COLUMN project_type TEXT DEFAULT 'none'")
+        except Exception as e:
+             print(f"Migration error (project_type): {e}")
+            
     # Create Responses table
-    # category = NIST Function (GOVERN, MAP...)
-    # question_id = CSA Control ID (AIS-01...)
-    # notes = subcategory mapping
     c.execute('''
         CREATE TABLE IF NOT EXISTS responses (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -40,7 +57,7 @@ def init_db():
     conn.commit()
     conn.close()
 
-def save_assessment(project_name, responses, total_score, maturity_level):
+def save_assessment(project_name, responses, total_score, maturity_level, scope="org", project_type="none"):
     """Save a full assessment and its responses."""
     conn = sqlite3.connect(DB_FILE)
     c = conn.cursor()
@@ -48,13 +65,21 @@ def save_assessment(project_name, responses, total_score, maturity_level):
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     c.execute('''
-        INSERT INTO assessments (timestamp, project_name, total_score, maturity_level)
-        VALUES (?, ?, ?, ?)
-    ''', (timestamp, project_name, total_score, maturity_level))
+        INSERT INTO assessments (timestamp, project_name, total_score, maturity_level, scope, project_type)
+        VALUES (?, ?, ?, ?, ?, ?)
+    ''', (
+        timestamp, 
+        project_name, 
+        total_score, 
+        maturity_level, 
+        scope, 
+        project_type
+    ))
     
     assessment_id = c.lastrowid
     
     for r in responses:
+        # Notes might contain relevant metadata, keeping as is
         c.execute('''
             INSERT INTO responses (assessment_id, category, question_id, score, notes)
             VALUES (?, ?, ?, ?, ?)
@@ -70,8 +95,13 @@ def load_history():
         return pd.DataFrame()
         
     conn = sqlite3.connect(DB_FILE)
-    df = pd.read_sql_query("SELECT * FROM assessments ORDER BY timestamp DESC", conn)
-    conn.close()
+    try:
+        df = pd.read_sql_query("SELECT * FROM assessments ORDER BY timestamp DESC", conn)
+    except Exception as e:
+        print(f"Error loading history: {e}")
+        df = pd.DataFrame()
+    finally:
+        conn.close()
     return df
 
 def get_assessment_details(assessment_id):
