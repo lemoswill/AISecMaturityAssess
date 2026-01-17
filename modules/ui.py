@@ -1,32 +1,141 @@
 import streamlit as st
 
-def load_custom_css():
-    """Inject custom CSS for a professional look."""
-    st.markdown("""
+
+def get_palo_alto_css():
+    """CSS for Palo Alto Networks Enterprise Look."""
+    return """
         <style>
-            /* === SILICON PRECISION DESIGN SYSTEM (Option C) === */
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             
-            /* Hide Main Menu (Hamburger) */
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             
-            /* Main App Container */
+            html, body, [data-testid="stAppViewContainer"] {
+                font-family: 'Inter', sans-serif !important;
+                background-color: #F8FAFC !important;
+                color: #0F172A !important;
+            }
+
+            .block-container {
+                padding-top: 1.5rem !important;
+                padding-bottom: 5rem !important;
+                max-width: 1200px !important;
+            }
+
+            /* --- Palo Alto Components --- */
+            .glass-card {
+                background: white !important;
+                border: 1px solid #E2E8F0 !important;
+                border-radius: 4px !important;
+                box-shadow: 0 1px 3px rgba(0,0,0,0.05) !important;
+                padding: 1.5rem;
+                margin-bottom: 1.5rem;
+                transition: none !important;
+                backdrop-filter: none !important;
+            }
+            .glass-card:hover {
+                transform: none !important;
+                border: 1px solid #CBD5E1 !important;
+                box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1) !important;
+            }
+
+            [data-testid="stSidebar"] {
+                background-color: #0F172A !important;
+                color: white !important;
+                border-right: 1px solid #1E293B !important;
+            }
+            [data-testid="stSidebar"] * { color: white !important; }
+            [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.1) !important; }
+
+            .stButton>button {
+                width: 100%;
+                border-radius: 4px !important;
+                height: 3rem !important;
+                background-color: #FF5B00 !important;
+                color: white !important;
+                border: none !important;
+                font-weight: 600 !important;
+                transition: opacity 0.2s ease !important;
+                box-shadow: none !important;
+            }
+            .stButton>button:hover {
+                opacity: 0.9 !important;
+                background-color: #FF5B00 !important;
+                color: white !important;
+            }
+            
+            /* Secondary Buttons */
+            div[data-testid="stColumn"] .stButton>button, 
+            .stDownloadButton>button {
+                background-color: white !important;
+                border: 1px solid #E2E8F0 !important;
+                color: #475569 !important;
+                box-shadow: none !important;
+            }
+            div[data-testid="stColumn"] .stButton>button:hover,
+            .stDownloadButton>button:hover {
+                background-color: #F8FAFC !important;
+                border-color: #CBD5E1 !important;
+            }
+
+            .stSuccess { background-color: #ECFDF5 !important; color: #065F46 !important; border-left: 4px solid #10B981 !important; border-radius: 4px !important; }
+            .stInfo { background-color: #EFF6FF !important; color: #1E40AF !important; border-left: 4px solid #3B82F6 !important; border-radius: 4px !important; }
+            .stWarning { background-color: #FFFBEB !important; color: #92400E !important; border-left: 4px solid #F59E0B !important; border-radius: 4px !important; }
+            .stError { background-color: #FEF2F2 !important; color: #991B1B !important; border-left: 4px solid #EF4444 !important; border-radius: 4px !important; }
+
+            [data-testid="stMetricValue"] { font-weight: 700 !important; font-size: 2rem !important; color: #0F172A !important; }
+            [data-testid="stMetricLabel"] { font-weight: 600 !important; text-transform: uppercase !important; color: #64748B !important; font-size: 0.7rem !important; }
+
+            .stProgress > div > div > div > div {
+                background-color: #FF5B00 !important;
+                box-shadow: none !important;
+            }
+
+            h1, h2, h3 { color: #0F172A !important; font-family: 'Inter', sans-serif !important; }
+            h1 { font-weight: 800 !important; letter-spacing: -0.02em !important; }
+
+            .mono-text {
+                font-family: 'monospace' !important;
+                font-size: 0.8rem !important;
+                background: #F1F5F9 !important;
+                border: 1px solid #E2E8F0 !important;
+                border-radius: 2px !important;
+            }
+
+            .stTextInput input, .stSelectbox select, .stTextArea textarea {
+                border-radius: 4px !important;
+                border: 1px solid #D1D5DB !important;
+                background-color: white !important;
+            }
+
+            .stTabs [data-baseweb="tab-list"] { gap: 16px !important; border-bottom: 2px solid #E2E8F0 !important; }
+            .stTabs [data-baseweb="tab"] { font-weight: 600 !important; color: #64748B !important; }
+            .stTabs [aria-selected="true"] { color: #FF5B00 !important; border-bottom: 2px solid #FF5B00 !important; }
+        </style>
+    """
+
+def get_silicon_precision_css():
+    """CSS for Silicon Precision (Glassmorphism) look."""
+    return """
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
+            
+            #MainMenu {visibility: hidden;}
+            footer {visibility: hidden;}
+            
             html, body, [data-testid="stAppViewContainer"] {
                 font-family: 'Plus Jakarta Sans', sans-serif !important;
                 background: linear-gradient(160deg, #E2E8F0 0%, #F0F4F8 100%) !important;
                 color: #0F172A !important;
             }
 
-            /* Block Container Spacing */
             .block-container {
                 padding-top: 1rem !important;
                 padding-bottom: 5rem !important;
                 max-width: 92% !important;
             }
             
-            /* === GLASS ELEMENTS === */
             .glass-card {
                 background: rgba(255, 255, 255, 0.45) !important;
                 backdrop-filter: blur(16px) saturate(180%) !important;
@@ -49,22 +158,12 @@ def load_custom_css():
                 border: 1px solid rgba(255, 255, 255, 0.7) !important;
             }
 
-            /* Glass Sidebar */
             [data-testid="stSidebar"] {
                 background-color: rgba(255, 255, 255, 0.8) !important;
                 backdrop-filter: blur(10px) !important;
                 border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
             }
 
-            /* Sidebar Nav Active Item Styling */
-            [data-testid="stSidebarNav"] ul li div[data-testid="stSidebarNavItem"] {
-                border-radius: 10px !important;
-                margin: 4px 12px !important;
-                padding: 8px 12px !important;
-                transition: all 0.2s ease !important;
-            }
-            
-            /* === BUTTONS (Silicon Precision Gradients) === */
             .stButton>button {
                 width: 100%;
                 border-radius: 12px !important;
@@ -85,7 +184,6 @@ def load_custom_css():
                 transform: translateY(-2px);
             }
             
-            /* Secondary/Ghost Buttons */
             div[data-testid="stColumn"] .stButton>button, 
             .stDownloadButton>button {
                 background: rgba(255, 255, 255, 0.6) !important;
@@ -95,20 +193,11 @@ def load_custom_css():
                 box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03) !important;
             }
             
-            /* === SEMANTIC NOTIFICATIONS === */
-            .stSuccess, .stInfo, .stWarning, .stError {
-                border-radius: 16px !important;
-                border: 1px solid rgba(255, 255, 255, 0.5) !important;
-                backdrop-filter: blur(12px) !important;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05) !important;
-            }
-            
-            .stSuccess { background-color: rgba(16, 185, 129, 0.15) !important; color: #065F46 !important; border-left: 6px solid #10B981 !important; }
-            .stInfo { background-color: rgba(59, 130, 246, 0.15) !important; color: #1E40AF !important; border-left: 6px solid #3B82F6 !important; }
-            .stWarning { background-color: rgba(245, 158, 11, 0.15) !important; color: #92400E !important; border-left: 6px solid #F59E0B !important; }
-            .stError { background-color: rgba(239, 68, 68, 0.15) !important; color: #991B1B !important; border-left: 6px solid #EF4444 !important; }
+            .stSuccess { background-color: rgba(16, 185, 129, 0.15) !important; color: #065F46 !important; border-left: 6px solid #10B981 !important; border-radius: 16px !important; }
+            .stInfo { background-color: rgba(59, 130, 246, 0.15) !important; color: #1E40AF !important; border-left: 6px solid #3B82F6 !important; border-radius: 16px !important; }
+            .stWarning { background-color: rgba(245, 158, 11, 0.15) !important; color: #92400E !important; border-left: 6px solid #F59E0B !important; border-radius: 16px !important; }
+            .stError { background-color: rgba(239, 68, 68, 0.15) !important; color: #991B1B !important; border-left: 6px solid #EF4444 !important; border-radius: 16px !important; }
 
-            /* === METRICS & DATA DISPLAY === */
             [data-testid="stMetricValue"] {
                 color: #0F172A !important;
                 font-family: 'Plus Jakarta Sans', sans-serif !important;
@@ -124,18 +213,15 @@ def load_custom_css():
                 letter-spacing: 0.1em !important;
             }
 
-            /* === PROGRESS BAR (Glowing Gradient) === */
             .stProgress > div > div > div > div {
                 background: linear-gradient(90deg, #2563EB 0%, #8B5CF6 100%) !important;
                 box-shadow: 0 0 20px rgba(37, 99, 235, 0.4) !important;
             }
 
-            /* === TYPOGRAPHY === */
             h1 { font-size: 1.6rem !important; font-weight: 800 !important; letter-spacing: -0.04em !important; color: #0F172A; }
             h2 { font-size: 1.3rem !important; font-weight: 700 !important; letter-spacing: -0.02em !important; color: #1E293B; }
             h3 { font-size: 1.1rem !important; font-weight: 700 !important; color: #334155; }
             
-            /* Mono Font for citations/technical data */
             .mono-text {
                 font-family: 'JetBrains Mono', monospace !important;
                 font-size: 0.85rem !important;
@@ -146,37 +232,32 @@ def load_custom_css():
                 border: 1px solid rgba(226, 232, 240, 0.8) !important;
             }
 
-            /* === INPUTS === */
             .stTextInput input, .stSelectbox select, .stTextArea textarea {
                 border-radius: 12px !important;
                 border: 1px solid rgba(226, 232, 240, 0.8) !important;
                 background-color: rgba(255, 255, 255, 0.8) !important;
-                padding: 12px 16px !important;
-                transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                backdrop-filter: blur(4px) !important;
-            }
-            .stTextInput input:focus {
-                border-color: #2563EB !important;
-                box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.15) !important;
             }
 
-            /* Tabs Customization (Linear Look) */
             .stTabs [data-baseweb="tab-list"] { 
                 gap: 24px !important;
                 border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
-            }
-            .stTabs [data-baseweb="tab"] {
-                height: 52px !important;
-                font-weight: 700 !important;
-                color: #64748B !important;
-                border-bottom: 3px solid transparent !important;
             }
             .stTabs [aria-selected="true"] {
                 color: #2563EB !important;
                 border-bottom: 3px solid #2563EB !important;
             }
         </style>
-    """, unsafe_allow_html=True)
+    """
+
+def load_custom_css(theme_name="Silicon Precision"):
+    """Inject custom CSS based on selected theme."""
+    if theme_name == "Palo Alto Enterprise":
+        css = get_palo_alto_css()
+    else:
+        css = get_silicon_precision_css()
+    
+    st.markdown(css, unsafe_allow_html=True)
+
 
 def display_header(title, subtitle=""):
     st.markdown(f"""
