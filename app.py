@@ -95,7 +95,6 @@ else:
 st.sidebar.markdown("---")
 
 # Architecture Info Card
-st.sidebar.markdown("""
 <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
             padding: 1rem; 
             border-radius: 8px; 
@@ -103,11 +102,35 @@ st.sidebar.markdown("""
             margin-bottom: 1rem;">
     <p style="color: #1E3A8A; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Architecture</p>
     <p style="color: #1E40AF; font-size: 0.85rem; margin: 0; line-height: 1.6;">
-        <strong>Macro:</strong> NIST AI RMF<br>
-        <strong>Detail:</strong> CSA AICM Controls
+        <strong>Framework:</strong> NIST AI RMF<br>
+        <strong>Controls:</strong> CSA AICM<br>
+        <span style="display: block; margin-top: 4px; font-size: 0.8rem; opacity: 0.8;">
+            {{"Organization" if "Organization" in st.session_state.get('scope_mode', 'Organization') else "Project: " + st.session_state.get('project_type_sel', 'Cloud')}}
+        </span>
     </p>
 </div>
 """, unsafe_allow_html=True)
+
+# Context Selector
+st.sidebar.markdown("### 🎯 Assessment Scope")
+scope_mode = st.sidebar.radio(
+    "Select Context", 
+    ["Organization (Macro)", "Project (Micro)"], 
+    index=0,
+    help="Macro: Governance & Policy. Micro: Specific System/Model risks."
+)
+st.session_state['scope_mode'] = scope_mode
+
+project_type_sel = "none"
+if "Project" in scope_mode:
+    project_type_sel = st.sidebar.selectbox(
+        "Deployment Type", 
+        ["Custom / Cloud", "SaaS (Consumer)"],
+        help="Cloud: You build/host it (Shared Resp). SaaS: You consume it (Vendor Risk)."
+    )
+st.session_state['project_type_sel'] = project_type_sel
+
+st.sidebar.divider()
 
 # Demo Warning Banner
 st.sidebar.markdown("""
@@ -232,8 +255,15 @@ if page == "Evidence Locker":
 if page == "Assessment":
     ui.display_header("AI Security Maturity Assessment", "NIST AI RMF mapped to CSA AICM Controls")
     
+    # --- Scope Logic ---
+    scope_key = "org" if "Organization" in st.session_state.get('scope_mode', 'Organization') else "project"
+    type_key = "cloud" if "Cloud" in st.session_state.get('project_type_sel', 'Cloud') else "saas"
+    
+    # Get Filtered Data
+    active_data = data.get_controls_for_scope(scope_key, type_key)
+    
     # --- Silicon Precision Hero Section ---
-    st.markdown("""
+    st.markdown(f"""
     <div class="glass-card" style="padding: 1.5rem; margin-top: 1rem; border-left: 6px solid #2563EB !important;">
         <div style="display: flex; align-items: center; gap: 20px;">
             <div style="background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%); 
@@ -247,9 +277,9 @@ if page == "Assessment":
                 </svg>
             </div>
             <div style="flex: 1;">
-                <h1 style="color: #0F172A; margin: 0; font-size: 1.4rem;">AI Security Maturity</h1>
+                <h1 style="color: #0F172A; margin: 0; font-size: 1.4rem;">AI Security Maturity <span style="opacity:0.5; font-weight:400;">| {st.session_state.get('scope_mode', 'Organization')}</span></h1>
                 <p style="color: #64748B; margin: 4px 0 0 0; font-size: 0.9rem; font-weight: 500;">
-                    Automated Assessment Across NIST AI RMF and CSA AICM Frameworks.
+                    Automated Assessment based on NIST AI RMF & CSA AICM ({type_key.title() if scope_key == 'project' else 'Macro'}).
                 </p>
             </div>
         </div>
@@ -266,7 +296,7 @@ if page == "Assessment":
         st.success(f"✅ **Intelligence Engine Online** - {len(files)} document(s) indexed")
         
         # --- AI Command Center Trigger ---
-        available_domains = list(data.NIST_FUNCTIONS.keys())
+        available_domains = list(active_data.keys())
         
         col_dom, col_act = st.columns([3, 1])
         with col_dom:
@@ -401,9 +431,9 @@ if page == "Assessment":
         total_controls = 0
         completed_controls = 0
         
-        for func in data.ASSESSMENT_DATA:
-            for subcat_key in data.ASSESSMENT_DATA[func]:
-                for control in data.ASSESSMENT_DATA[func][subcat_key]['csa_controls']:
+        for func in active_data:
+            for subcat_key in active_data[func]:
+                for control in active_data[func][subcat_key]['csa_controls']:
                     # Filter by wave
                     if selected_wave_id_temp is not None and control.get('wave', 2) != selected_wave_id_temp:
                         continue
@@ -440,9 +470,9 @@ if page == "Assessment":
         else:
             # Prepare responses
             final_responses = []
-            for func in data.ASSESSMENT_DATA:
-                for subcat_key in data.ASSESSMENT_DATA[func]:
-                    for control in data.ASSESSMENT_DATA[func][subcat_key]['csa_controls']:
+            for func in active_data:
+                for subcat_key in active_data[func]:
+                    for control in active_data[func][subcat_key]['csa_controls']:
                         unique_id = f"score_{subcat_key}_{control['id']}"
                         val = st.session_state.get(unique_id, 0)
                         
@@ -472,11 +502,11 @@ if page == "Assessment":
             
             # Calculate stats
             func_scores = {}
-            for func in data.ASSESSMENT_DATA:
+            for func in active_data:
                 func_total = 0
                 func_count = 0
-                for subcat_key in data.ASSESSMENT_DATA[func]:
-                    for control in data.ASSESSMENT_DATA[func][subcat_key]['csa_controls']:
+                for subcat_key in active_data[func]:
+                    for control in active_data[func][subcat_key]['csa_controls']:
                         unique_id = f"score_{subcat_key}_{control['id']}"
                         val = st.session_state.get(unique_id, 0)
                         
@@ -503,7 +533,7 @@ if page == "Assessment":
             if avg_score > 4.5: level = "Optimized"
             
             # Save to DB
-            storage.save_assessment(project_name, final_responses, avg_score, level)
+            storage.save_assessment(project_name, final_responses, avg_score, level, scope=scope_key, project_type=type_key)
             
             # Generate CSV
             import io
@@ -550,7 +580,7 @@ if page == "Assessment":
         if active_key:
             # Gather controls for this function
             target_controls = []
-            subcats_bulk = data.ASSESSMENT_DATA[target_func]
+            subcats_bulk = active_data[target_func]
             for sk, sd in subcats_bulk.items():
                 c_list = sd.get('csa_controls', [])
                 if selected_wave_id is not None:
@@ -590,9 +620,9 @@ if page == "Assessment":
                 st.success(f"Analyzed {len(target_controls)} controls in {target_func}")
                 st.balloons()
         
-    tabs = st.tabs(list(data.ASSESSMENT_DATA.keys()))
+    tabs = st.tabs(list(active_data.keys()))
     
-    for i, func in enumerate(data.ASSESSMENT_DATA):
+    for i, func in enumerate(active_data):
         with tabs[i]:
             st.markdown(f"### {func}: {data.NIST_FUNCTIONS.get(func, '')}")
             
@@ -616,7 +646,7 @@ if page == "Assessment":
                     
                     # Gather controls
                     target_controls = []
-                    subcats_bulk = data.ASSESSMENT_DATA[func]
+                    subcats_bulk = active_data[func]
                     for sk, sd in subcats_bulk.items():
                         c_list = sd.get('csa_controls', [])
                         if selected_wave_id is not None:
@@ -662,7 +692,7 @@ if page == "Assessment":
             
             st.divider()
 
-            subcats = data.ASSESSMENT_DATA[func]
+            subcats = active_data[func]
             function_total_score = 0
             has_visible_controls = False
             
@@ -761,7 +791,12 @@ elif page == "History & Dashboard":
         st.info("No assessments found.")
     else:
         # Selection Logic
-        assessment_options = {f"{row['project_name']} ({row['timestamp']})": row['id'] for index, row in df.iterrows()}
+        assessment_options = {}
+        for index, row in df.iterrows():
+            scope_label = row.get('scope', 'Org').upper() if row.get('scope') else 'ORG'
+            ptype_label = f"({row.get('project_type')})" if row.get('project_type') and row.get('project_type') != 'none' else ""
+            label = f"{row['project_name']} [{scope_label}{ptype_label}] ({row['timestamp']})"
+            assessment_options[label] = row['id']
         selected_option = st.selectbox("Select Assessment to View:", list(assessment_options.keys()))
         selected_id = assessment_options[selected_option]
         
