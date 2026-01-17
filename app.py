@@ -18,7 +18,9 @@ st.set_page_config(
 
 # --- Initialization ---
 storage.init_db()
-ui.load_custom_css()
+if 'ui_style' not in st.session_state:
+    st.session_state['ui_style'] = "Silicon Precision"
+ui.load_custom_css(st.session_state['ui_style'])
 
 # --- Session State ---
 if 'responses' not in st.session_state:
@@ -112,10 +114,6 @@ st.sidebar.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-st.sidebar.divider()
-
-st.sidebar.divider()
-
 # Demo Warning Banner
 st.sidebar.markdown("""
 <div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); 
@@ -127,11 +125,26 @@ st.sidebar.markdown("""
     <p style="color: #78350F; font-size: 0.75rem; margin: 0; line-height: 1.5;">
         Data is <strong>not persisted</strong> between sessions.
     </p>
-    <p style="color: #059669; font-size: 0.75rem; margin: 8px 0 0 0; font-weight: 600;">
-        ✅ Download your assessment before closing!
-    </p>
 </div>
 """, unsafe_allow_html=True)
+
+# --- Style & Appearance ---
+st.sidebar.markdown('<p style="color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem;">Appearance Settings</p>', unsafe_allow_html=True)
+
+theme_choice = st.sidebar.radio(
+    "Select Interface Style",
+    ["Silicon Precision", "Palo Alto Enterprise"],
+    index=0 if st.session_state['ui_style'] == "Silicon Precision" else 1,
+    help="Toggle between professional Glassmorphism and Palo Alto Enterprise design.",
+    label_visibility="collapsed"
+)
+
+if theme_choice != st.session_state['ui_style']:
+    st.session_state['ui_style'] = theme_choice
+    st.rerun()
+
+
+
 
 # --- Main Content ---
 
