@@ -349,109 +349,104 @@ def get_silicon_precision_css():
     """CSS for Silicon Precision (Glassmorphism) look."""
     return """
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
             @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap');
             
             #MainMenu {visibility: hidden;}
             footer {visibility: hidden;}
             
             html, body, [data-testid="stAppViewContainer"] {
-                font-family: 'Plus Jakarta Sans', sans-serif !important;
-                background: linear-gradient(160deg, #E2E8F0 0%, #F0F4F8 100%) !important;
-                color: #0F172A !important;
+                font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif !important;
+                background: #FAFBFC !important;
+                color: #1C2127 !important;
+                -webkit-font-smoothing: antialiased;
             }
 
             .block-container {
-                padding-top: 1rem !important;
-                padding-bottom: 5rem !important;
-                max-width: 92% !important;
+                padding: 2.5rem 2rem 6rem 2rem !important;
+                max-width: 1440px !important;
             }
             
             .glass-card {
-                background: rgba(255, 255, 255, 0.45) !important;
-                backdrop-filter: blur(16px) saturate(180%) !important;
-                -webkit-backdrop-filter: blur(16px) saturate(180%) !important;
-                border: 1px solid rgba(255, 255, 255, 0.5) !important;
-                border-radius: 20px !important;
-                box-shadow: 
-                    0 4px 6px -1px rgba(0, 0, 0, 0.05),
-                    0 10px 15px -3px rgba(31, 38, 135, 0.08),
-                    inset 0 0 20px rgba(255, 255, 255, 0.3) !important;
-                padding: 1.8rem;
-                margin-bottom: 1.8rem;
-                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                background: #FFFFFF !important;
+                border: 1px solid #E1E4E8 !important;
+                border-radius: 8px !important;
+                box-shadow: 0 1px 3px rgba(27, 31, 35, 0.04) !important;
+                padding: 2rem !important;
+                margin-bottom: 1.5rem !important;
+                transition: all 0.2s ease !important;
+                backdrop-filter: none !important;
             }
             
             .glass-card:hover {
-                transform: translateY(-4px);
-                background: rgba(255, 255, 255, 0.55) !important;
-                box-shadow: 0 20px 25px -5px rgba(31, 38, 135, 0.15) !important;
-                border: 1px solid rgba(255, 255, 255, 0.7) !important;
+                border-color: #0969DA !important;
+                box-shadow: 0 3px 8px rgba(9, 105, 218, 0.08) !important;
+                transform: translateY(-1px) !important;
             }
 
             [data-testid="stSidebar"] {
-                background-color: rgba(255, 255, 255, 0.8) !important;
-                backdrop-filter: blur(10px) !important;
-                border-right: 1px solid rgba(255, 255, 255, 0.5) !important;
+                background: #FFFFFF !important;
+                border-right: 1px solid #E1E4E8 !important;
             }
 
             .stButton>button {
                 width: 100%;
-                border-radius: 12px !important;
-                height: 3.4em !important;
-                background: linear-gradient(135deg, #2563EB 0%, #4F46E5 100%) !important;
+                border-radius: 6px !important;
+                height: 2.75rem !important;
+                background: #0969DA !important;
                 color: #FFFFFF !important;
-                border: 1px solid rgba(255, 255, 255, 0.2) !important;
-                font-weight: 700 !important;
-                font-size: 0.95rem !important;
-                letter-spacing: -0.01em;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1) !important;
-                box-shadow: 0 8px 15px rgba(37, 99, 235, 0.25);
+                border: 1px solid rgba(27, 31, 35, 0.15) !important;
+                font-weight: 600 !important;
+                font-size: 0.875rem !important;
+                transition: all 0.15s ease !important;
+                box-shadow: 0 1px 0 rgba(27, 31, 35, 0.04) !important;
             }
             
             .stButton>button:hover {
-                background: linear-gradient(135deg, #1D4ED8 0%, #4338CA 100%) !important;
-                box-shadow: 0 12px 24px rgba(37, 99, 235, 0.35) !important;
-                transform: translateY(-2px);
+                background: #0860CA !important;
             }
             
             div[data-testid="stColumn"] .stButton>button, 
             .stDownloadButton>button {
-                background: rgba(255, 255, 255, 0.6) !important;
-                backdrop-filter: blur(8px) !important;
-                border: 1px solid rgba(255, 255, 255, 0.8) !important;
-                color: #475569 !important;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.03) !important;
+                background: #F6F8FA !important;
+                border: 1px solid #D0D7DE !important;
+                color: #24292F !important;
+                box-shadow: 0 1px 0 rgba(27, 31, 35, 0.04) !important;
             }
             
-            .stSuccess { background-color: rgba(16, 185, 129, 0.15) !important; color: #065F46 !important; border-left: 6px solid #10B981 !important; border-radius: 16px !important; }
-            .stInfo { background-color: rgba(59, 130, 246, 0.15) !important; color: #1E40AF !important; border-left: 6px solid #3B82F6 !important; border-radius: 16px !important; }
-            .stWarning { background-color: rgba(245, 158, 11, 0.15) !important; color: #92400E !important; border-left: 6px solid #F59E0B !important; border-radius: 16px !important; }
-            .stError { background-color: rgba(239, 68, 68, 0.15) !important; color: #991B1B !important; border-left: 6px solid #EF4444 !important; border-radius: 16px !important; }
+            div[data-testid="stColumn"] .stButton>button:hover,
+            .stDownloadButton>button:hover {
+                background: #F3F4F6 !important;
+                border-color: #D0D7DE !important;
+            }
+            
+            .stSuccess { background: #DFF6DD !important; color: #1A7F37 !important; border: 1px solid rgba(26, 127, 55, 0.2) !important; border-left: 3px solid #1A7F37 !important; border-radius: 6px !important; }
+            .stInfo { background: #DDF4FF !important; color: #0969DA !important; border: 1px solid rgba(9, 105, 218, 0.2) !important; border-left: 3px solid #0969DA !important; border-radius: 6px !important; }
+            .stWarning { background: #FFF8C5 !important; color: #7D4E00 !important; border: 1px solid rgba(125, 78, 0, 0.2) !important; border-left: 3px solid #9A6700 !important; border-radius: 6px !important; }
+            .stError { background: #FFEBE9 !important; color: #CF222E !important; border: 1px solid rgba(207, 34, 46, 0.2) !important; border-left: 3px solid #CF222E !important; border-radius: 6px !important; }
 
-            [data-testid="stMetricValue"] {
-                color: #0F172A !important;
-                font-family: 'Plus Jakarta Sans', sans-serif !important;
-                font-weight: 800 !important;
-                font-size: 1.8rem !important;
+            [data-testid="stMetricValue"] { 
+                font-weight: 700 !important; 
+                font-size: 2rem !important; 
+                color: #1C2127 !important;
                 letter-spacing: -0.04em !important;
             }
-            [data-testid="stMetricLabel"] {
-                color: #64748B !important;
-                font-weight: 700 !important;
-                text-transform: uppercase !important;
-                font-size: 0.75rem !important;
-                letter-spacing: 0.1em !important;
+            [data-testid="stMetricLabel"] { 
+                font-weight: 600 !important; 
+                text-transform: uppercase !important; 
+                color: #57606A !important; 
+                font-size: 0.6875rem !important;
+                letter-spacing: 0.06em !important;
             }
 
             .stProgress > div > div > div > div {
-                background: linear-gradient(90deg, #2563EB 0%, #8B5CF6 100%) !important;
-                box-shadow: 0 0 20px rgba(37, 99, 235, 0.4) !important;
+                background: linear-gradient(90deg, #0969DA 0%, #1F6FEB 100%) !important;
+                border-radius: 3px !important;
             }
 
-            h1 { font-size: 1.6rem !important; font-weight: 800 !important; letter-spacing: -0.04em !important; color: #0F172A; }
-            h2 { font-size: 1.3rem !important; font-weight: 700 !important; letter-spacing: -0.02em !important; color: #1E293B; }
-            h3 { font-size: 1.1rem !important; font-weight: 700 !important; color: #334155; }
+            h1 { font-size: 2rem !important; font-weight: 700 !important; letter-spacing: -0.04em !important; color: #1C2127 !important; line-height: 1.25 !important; }
+            h2 { font-size: 1.5rem !important; font-weight: 600 !important; letter-spacing: -0.02em !important; color: #1C2127 !important; line-height: 1.33 !important; }
+            h3 { font-size: 1.25rem !important; font-weight: 600 !important; color: #1C2127 !important; line-height: 1.4 !important; }
             
             .mono-text {
                 font-family: 'JetBrains Mono', monospace !important;
@@ -464,18 +459,43 @@ def get_silicon_precision_css():
             }
 
             .stTextInput input, .stSelectbox select, .stTextArea textarea {
-                border-radius: 12px !important;
-                border: 1px solid rgba(226, 232, 240, 0.8) !important;
-                background-color: rgba(255, 255, 255, 0.8) !important;
+                border-radius: 6px !important;
+                border: 1px solid #D0D7DE !important;
+                background: #FFFFFF !important;
+                color: #1C2127 !important;
+                font-size: 0.875rem !important;
+                padding: 0.5rem 0.75rem !important;
+                transition: all 0.15s ease !important;
+            }
+            
+            .stTextInput input:focus, .stSelectbox select:focus, .stTextArea textarea:focus {
+                border-color: #0969DA !important;
+                outline: 2px solid transparent !important;
+                box-shadow: 0 0 0 3px rgba(9, 105, 218, 0.15) !important;
             }
 
             .stTabs [data-baseweb="tab-list"] { 
-                gap: 24px !important;
-                border-bottom: 1px solid rgba(226, 232, 240, 0.8) !important;
+                gap: 0 !important;
+                border-bottom: 1px solid #D0D7DE !important;
+                padding: 0 !important;
+            }
+            .stTabs [data-baseweb="tab"] {
+                font-weight: 600 !important; 
+                color: #57606A !important;
+                padding: 0.75rem 1rem !important;
+                font-size: 0.875rem !important;
+                border-bottom: 2px solid transparent !important;
+                margin-bottom: -1px !important;
+                transition: all 0.15s ease !important;
+            }
+            .stTabs [data-baseweb="tab"]:hover {
+                color: #1C2127 !important;
+                border-bottom-color: #D0D7DE !important;
             }
             .stTabs [aria-selected="true"] {
-                color: #2563EB !important;
-                border-bottom: 3px solid #2563EB !important;
+                color: #1C2127 !important;
+                border-bottom: 2px solid #FD8C73 !important;
+                font-weight: 600 !important;
             }
         </style>
     """
