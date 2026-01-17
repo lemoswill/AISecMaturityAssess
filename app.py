@@ -357,10 +357,10 @@ if page == "Assessment":
         st.markdown("---")
     
         # --- Maturity Journey (Phase Tracker) ---
-        st.markdown(\"""<h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
+        st.markdown("""<h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
             Maturity Journey Phase
-        </h3>\""", unsafe_allow_html=True)
+        </h3>""", unsafe_allow_html=True)
         
         wave_names = list(data.MATURITY_WAVES.values())
         wave_options = ["All Waves"] + wave_names
