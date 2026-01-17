@@ -400,7 +400,7 @@ if page == "Assessment":
                             continue
                         
                         total_controls += 1
-                        unique_id = f"score_{subcat_key}_{control['id']}"
+unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
                         val = st.session_state.get(unique_id, 0)
                         
                         if isinstance(val, int) and val > 0:
@@ -431,7 +431,7 @@ if page == "Assessment":
                 for func in active_data:
                     for subcat_key in active_data[func]:
                         for control in active_data[func][subcat_key]['csa_controls']:
-                            unique_id = f"score_{subcat_key}_{control['id']}"
+                            unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
                             val = st.session_state.get(unique_id, 0)
                             
                             score = 0
@@ -457,7 +457,7 @@ if page == "Assessment":
                     func_count = 0
                     for subcat_key in active_data[func]:
                         for control in active_data[func][subcat_key]['csa_controls']:
-                            unique_id = f"score_{subcat_key}_{control['id']}"
+                            unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
                             val = st.session_state.get(unique_id, 0)
                             score = 0
                             if isinstance(val, int): score = val
@@ -523,7 +523,7 @@ if page == "Assessment":
                     for idx, (sk, c) in enumerate(target_controls):
                         status_text.text(f"Analyzing {idx+1}/{len(target_controls)}: {c['id']}...")
                         progress_bar.progress((idx + 1) / len(target_controls))
-                        unique_id = f"score_{sk}_{c['id']}"
+                        unique_id = f"score_{scope_key}_{type_key}_{sk}_{c['id']}"
                         try:
                             res = engine.assess_control(c['text'], c.get('help', ''), active_key, provider=current_provider, model_name=active_model)
                             st.session_state['ai_results'][unique_id] = res
@@ -565,7 +565,7 @@ if page == "Assessment":
                     # Subcat Header
                     current_subcat_total = 0
                     for c in visible_controls:
-                        unique_id = f"score_{subcat_key}_{c['id']}"
+                        unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{c['id']}"
                         val = st.session_state.get(unique_id, 0)
                         score = 0
                         if isinstance(val, int): score = val
@@ -586,7 +586,7 @@ if page == "Assessment":
                         st.divider()
                         
                         for control in visible_controls:
-                            unique_id = f"score_{subcat_key}_{control['id']}"
+                            unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
                             
                             # AI Button
                             current_provider = st.session_state.get('ai_provider', 'OpenAI')
