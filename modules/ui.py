@@ -37,8 +37,17 @@ def get_palo_alto_css():
                 backdrop-filter: none !important;
                 position: relative;
                 overflow: hidden;
+                color: #0F172A !important;
             }
             
+            /* Enforce Dark Text Inside Cards */
+            .glass-card h1, .glass-card h2, .glass-card h3, .glass-card h4, .glass-card h5, .glass-card h6 {
+                color: #0F172A !important;
+            }
+            .glass-card p, .glass-card span, .glass-card div {
+                color: #334155 !important;
+            }
+
             .glass-card::before {
                 content: '';
                 position: absolute;
@@ -62,6 +71,43 @@ def get_palo_alto_css():
             .glass-card:hover::before {
                 opacity: 1;
             }
+
+            /* === EXPANDER CONTROL (Requirements) === */
+            .streamlit-expanderHeader {
+                background-color: #FFFFFF !important;
+                border: 1px solid #E2E8F0 !important;
+                border-radius: 8px !important;
+                color: #0F172A !important;
+                font-weight: 600 !important;
+                margin-bottom: 0.5rem;
+            }
+            .streamlit-expanderHeader:hover {
+                border-color: #FF6B00 !important;
+                color: #FF6B00 !important;
+            }
+            .streamlit-expanderContent {
+                background-color: #F8FAFC !important;
+                border: 1px solid #E2E8F0 !important;
+                border-top: none !important;
+                border-radius: 0 0 8px 8px !important;
+                padding: 1.5rem !important;
+                color: #334155 !important;
+            }
+            
+            /* === INPUT LABELS (Global Fix) === */
+            .stTextInput label, .stSelectbox label, .stTextArea label, .stSlider label {
+                color: #F8FAFC !important; /* Main page labels on dark bg */
+                font-weight: 600 !important;
+                font-size: 0.9rem !important;
+            }
+            
+            /* Fix labels inside expanders or cards (if any context requires dark text) */
+            .streamlit-expanderContent label {
+                color: #334155 !important;
+            }
+            
+            /* Metric Titles inside cards need to be handled if they are native metrics? 
+               But user said "Project / Product Name" which is an input. */
 
             /* === SIDEBAR PREMIUM === */
             [data-testid="stSidebar"] {
