@@ -44,8 +44,23 @@ def get_palo_alto_css():
                 color: white !important;
                 border-right: 1px solid #1E293B !important;
             }
-            [data-testid="stSidebar"] * { color: white !important; }
+            /* Sidebar Typography */
+            [data-testid="stSidebar"] h1, [data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3, [data-testid="stSidebar"] p {
+                color: white !important;
+            }
             [data-testid="stSidebar"] hr { border-color: rgba(255,255,255,0.1) !important; }
+
+            /* Fix Sidebar Input Contrast */
+            [data-testid="stSidebar"] .stSelectbox label, [data-testid="stSidebar"] .stRadio label {
+                color: white !important;
+            }
+            [data-testid="stSidebar"] .stSelectbox div[data-baseweb="select"] > div {
+                background-color: white !important;
+                color: #0F172A !important;
+            }
+            [data-testid="stSidebar"] .stRadio div[role="radiogroup"] label {
+                color: white !important;
+            }
 
             .stButton>button {
                 width: 100%;
