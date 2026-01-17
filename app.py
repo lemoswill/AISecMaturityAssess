@@ -56,25 +56,31 @@ st.sidebar.markdown("""
 <style>
     /* Custom Radio Button Styling */
     div[data-testid="stSidebar"] .stRadio > label {
+        display: flex !important;
+        width: 100% !important;
         background: transparent;
         padding: 0.75rem 1rem;
         border-radius: 8px;
         margin-bottom: 0.5rem;
         transition: all 0.2s ease;
         cursor: pointer;
-        border: 1px solid transparent;
+        border: 1px solid rgba(148, 163, 184, 0.2);
     }
     
     div[data-testid="stSidebar"] .stRadio > label:hover {
-        background: #F8FAFC;
-        border-color: #E2E8F0;
+        background: rgba(255, 107, 0, 0.1);
+        border-color: #FF6B00;
     }
     
     div[data-testid="stSidebar"] .stRadio > label[data-checked="true"] {
-        background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%);
-        border-left: 4px solid #0066CC;
+        background: linear-gradient(135deg, #FF6B00 0%, #FFA300 100%);
+        border: none;
         font-weight: 600;
-        color: #1E3A8A;
+        color: white !important;
+        box-shadow: 0 4px 12px rgba(255, 107, 0, 0.3);
+    }
+    div[data-testid="stSidebar"] .stRadio > label[data-checked="true"] p {
+        color: white !important;
     }
 </style>
 <div style="margin-bottom: 1.5rem;">
@@ -98,16 +104,16 @@ st.sidebar.markdown("---")
 
 # Architecture Info Card
 st.sidebar.markdown(f"""
-<div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
+<div style="background: #E0F2FE; 
             padding: 1rem; 
             border-radius: 8px; 
-            border-left: 4px solid #0066CC;
+            border-left: 4px solid #0369A1;
             margin-bottom: 1rem;">
-    <p style="color: #1E3A8A; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Architecture</p>
-    <p style="color: #1E40AF; font-size: 0.85rem; margin: 0; line-height: 1.6;">
-        <strong>Framework:</strong> NIST AI RMF<br>
-        <strong>Controls:</strong> CSA AICM<br>
-        <span style="display: block; margin-top: 4px; font-size: 0.8rem; opacity: 0.8;">
+    <p style="color: #0369A1; font-size: 0.7rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 8px 0;">Architecture</p>
+    <p style="color: #0C4A6E; font-size: 0.85rem; margin: 0; line-height: 1.6;">
+        <strong style="color: #0C4A6E;">Framework:</strong> NIST AI RMF<br>
+        <strong style="color: #0C4A6E;">Controls:</strong> CSA AICM<br>
+        <span style="display: block; margin-top: 4px; font-size: 0.8rem; font-weight: 600;">
             {"Organization" if "Organization" in st.session_state.get('scope_mode', 'Organization') else "Project: " + st.session_state.get('project_type_sel', 'Cloud')}
         </span>
     </p>
@@ -116,13 +122,13 @@ st.sidebar.markdown(f"""
 
 # Demo Warning Banner
 st.sidebar.markdown("""
-<div style="background: linear-gradient(135deg, #FEF3C7 0%, #FDE68A 100%); 
+<div style="background: #FEF3C7; 
             padding: 1rem; 
             border-radius: 8px; 
-            border-left: 4px solid #F59E0B;
-            margin-bottom: 1rem;">
-    <p style="color: #92400E; font-size: 0.75rem; font-weight: 700; margin: 0 0 6px 0;">🧪 DEMO MODE</p>
-    <p style="color: #78350F; font-size: 0.75rem; margin: 0; line-height: 1.5;">
+            border-left: 4px solid #D97706;
+            margin-bottom: 1.5rem;">
+    <p style="color: #92400E; font-size: 0.75rem; font-weight: 800; margin: 0 0 6px 0;">🧪 DEMO MODE</p>
+    <p style="color: #78350F; font-size: 0.8rem; margin: 0; line-height: 1.5; font-weight: 500;">
         Data is <strong>not persisted</strong> between sessions.
     </p>
 </div>
