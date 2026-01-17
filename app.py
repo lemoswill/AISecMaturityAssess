@@ -400,7 +400,7 @@ if page == "Assessment":
                             continue
                         
                         total_controls += 1
-unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
+                        unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
                         val = st.session_state.get(unique_id, 0)
                         
                         if isinstance(val, int) and val > 0:
