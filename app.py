@@ -95,6 +95,7 @@ else:
 st.sidebar.markdown("---")
 
 # Architecture Info Card
+st.sidebar.markdown(f"""
 <div style="background: linear-gradient(135deg, #EFF6FF 0%, #DBEAFE 100%); 
             padding: 1rem; 
             border-radius: 8px; 
@@ -105,7 +106,7 @@ st.sidebar.markdown("---")
         <strong>Framework:</strong> NIST AI RMF<br>
         <strong>Controls:</strong> CSA AICM<br>
         <span style="display: block; margin-top: 4px; font-size: 0.8rem; opacity: 0.8;">
-            {{"Organization" if "Organization" in st.session_state.get('scope_mode', 'Organization') else "Project: " + st.session_state.get('project_type_sel', 'Cloud')}}
+            {"Organization" if "Organization" in st.session_state.get('scope_mode', 'Organization') else "Project: " + st.session_state.get('project_type_sel', 'Cloud')}
         </span>
     </p>
 </div>
