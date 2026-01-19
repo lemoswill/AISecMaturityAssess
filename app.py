@@ -7,7 +7,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import pandas as pd
 import datetime
-from modules import ui, storage, data, evidence, ai_engine, mappings, charts, reporting, roi, i18n, scoring, adapter
+from modules import ui, storage, data, utils, charts, reporting, i18n, ai_engine, scoring, adapter, indicators, evidence, mappings, roi
 
 # --- Configuration ---
 st.set_page_config(
@@ -1084,12 +1084,41 @@ elif page == "Executive Dashboard":
             
     # === ROW 2: DETAILED ANALYSIS ===
     st.markdown("---")
-    # --- Persona-Based Dashboard (v2) ---
     st.markdown(f"## 📊 {i18n.t('dashboard_tab')}")
     
+    # --- Framework Filter Badges ---
+    all_frameworks = ["NIST AI RMF", "ISO/IEC 27001", "LGPD", "CSA AI Security", "OWASP LLM", "EU AI Act"]
+    
+    if 'selected_frameworks' not in st.session_state:
+        st.session_state.selected_frameworks = []
+        
+    badge_html = "<div style='display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap;'>"
+    for fw in all_frameworks:
+        is_active = fw in st.session_state.selected_frameworks
+        bg_color = "#3B82F6" if is_active else "#F1F5F9"
+        text_color = "white" if is_active else "#64748B"
+        border = "none" if is_active else "1px solid #E2E8F0"
+        badge_html += f'<span style="padding: 4px 12px; border-radius: 100px; background: {bg_color}; color: {text_color}; border: {border}; font-size: 0.75rem; font-weight: 600; cursor: pointer;">{fw}</span>'
+    badge_html += "</div>"
+    st.markdown(badge_html, unsafe_allow_html=True)
+    
+    # Framework selection logic (using buttons for actual interactivity since span clicks aren't captured)
+    fw_cols = st.columns(len(all_frameworks))
+    for i, fw in enumerate(all_frameworks):
+        with fw_cols[i]:
+            if st.button(fw, key=f"fw_btn_{fw}", use_container_width=True, type="secondary" if fw not in st.session_state.selected_frameworks else "primary"):
+                if fw in st.session_state.selected_frameworks:
+                    st.session_state.selected_frameworks.remove(fw)
+                else:
+                    st.session_state.selected_frameworks.append(fw)
+                st.rerun()
+
     # Calculate v2 Metrics using the Adapter
     # We use the persistent responses from st.session_state
-    v2_metrics = adapter.get_v2_metrics(st.session_state.get('responses', {}))
+    v2_metrics = adapter.get_v2_metrics(
+        st.session_state.get('responses', {}),
+        selected_frameworks=st.session_state.selected_frameworks if st.session_state.selected_frameworks else None
+    )
     overall = adapter.get_overall_metrics(v2_metrics)
     
     persona_tabs = st.tabs(["🏛️ Executive", "⚖️ GRC & Compliance", "🛠️ Specialist & Technical"])
@@ -1099,7 +1128,34 @@ elif page == "Executive Dashboard":
         col_main, col_stats = st.columns([2, 1])
         
         with col_main:
-            st.markdown("### Strategic Maturity Posture")
+            st.markdown("### 🎯 AI Security & Risk Indicators")
+            # Calculate Indicators
+            all_questions = []
+            for dm in v2_metrics:
+                for sm in dm.subcategory_metrics:
+                    all_questions.extend(sm.questions)
+            
+            ai_indicators = indicators.calculate_indicators(all_questions, st.session_state.get('responses', {}))
+            
+            # Render Indicator Cards
+            ind_col1, ind_col2 = st.columns(2)
+            for i, ind in enumerate(ai_indicators):
+                col = ind_col1 if i % 2 == 0 else ind_col2
+                with col:
+                    st.markdown(f"""
+                        <div class="glass-card" style="padding: 1rem; margin-bottom: 12px; border-left: 4px solid {ind['color']} !important;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <span style="font-size: 1.2rem;">{ind['icon']} <b>{ind['label']}</b></span>
+                                <span style="font-weight: 700; color: {ind['color']};">{ind['percentage']:.0f}%</span>
+                            </div>
+                            <p style="font-size: 0.75rem; color: #64748B; margin: 5px 0;">{ind['description']}</p>
+                            <div style="background: #F1F5F9; border-radius: 100px; height: 6px; width: 100%;">
+                                <div style="background: {ind['color']}; height: 6px; width: {ind['percentage']}%; border-radius: 100px;"></div>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
+            
+            st.markdown("### 🌐 Strategic Maturity Posture")
             # Global Radar Chart across NIST functions
             radar_labels = [dm.domain_name.split(' (')[0] for dm in v2_metrics]
             radar_values = [dm.score * 5 for dm in v2_metrics] # Scale to 0-5
@@ -1107,10 +1163,16 @@ elif page == "Executive Dashboard":
             st.plotly_chart(fig_radar, use_container_width=True)
             
         with col_stats:
-            st.markdown("### Key Technical Indicators")
+            st.markdown("### 📊 Distribution & Trend")
+            
+            # Score Distribution Ring
+            crit = sum([dm.critical_gaps for dm in v2_metrics])
+            high = len([s for dm in v2_metrics for s in dm.subcategory_metrics if s.criticality == 'High' and s.score < 0.5])
+            fig_ring = charts.plot_risk_distribution_ring(crit, high, 5, 10) # Dummy 5, 10 for now
+            st.plotly_chart(fig_ring, use_container_width=True)
+
             # Maturity Gauge
-            st.metric("Overall Maturity", overall['maturity_level'], delta=f"{overall['score']*100:.1f}%")
-            st.info(f"**Insights:** {overall['total_questions']} controls evaluated. {overall['critical_gaps']} critical gaps identified.")
+            st.metric("Overall Maturity Score", f"{overall['score']*5:.1f} / 5.0", delta=overall['maturity_level'])
             
             # ROI Summary
             roi_results = roi.calculate_roi(overall['score'] * 5)
@@ -1149,45 +1211,59 @@ elif page == "Executive Dashboard":
                         st.progress(sub.score)
                     col_s3.write(f"{sub.maturity_level}")
 
-    # === ROW 3: RISK MATRIX ===
-    st.subheader("🎯 Priority Risk Matrix")
-    fig_risk = charts.plot_risk_heatmap(details_df)
-    if fig_risk:
-        st.plotly_chart(fig_risk, width='stretch')
-    else:
-        st.success("✅ No critical gaps identified! Risk exposure is minimal.")
+    # === ROW 3: STRATEGIC ROADMAP GRID ===
+    st.markdown("---")
+    st.subheader("🚀 Strategic Implementation Roadmap")
+    
+    roadmap_items = scoring.generate_roadmap(v2_metrics)
+    
+    road_col1, road_col2, road_col3 = st.columns(3)
+    
+    road_sections = [
+        {'id': 'immediate', 'col': road_col1, 'title': '0-30 Dias (Crítico)', 'color': '#EF4444', 'bg': '#FEF2F2'},
+        {'id': 'short', 'col': road_col2, 'title': '30-60 Dias (Prioritário)', 'color': '#F59E0B', 'bg': '#FFFBEB'},
+        {'id': 'medium', 'col': road_col3, 'title': '60-90 Dias (Estratégico)', 'color': '#3B82F6', 'bg': '#EFF6FF'}
+    ]
+    
+    for section in road_sections:
+        with section['col']:
+            st.markdown(f"""
+                <div style="background: {section['color']}; color: white; padding: 8px 16px; border-radius: 8px 8px 0 0; font-weight: 700; font-size: 0.9rem;">
+                    {section['title']}
+                </div>
+            """, unsafe_allow_html=True)
+            
+            items = [ritem for ritem in roadmap_items if ritem.priority == section['id']]
+            if not items:
+                st.markdown(f"""
+                    <div style="background: {section['bg']}; color: #64748B; padding: 20px; border: 1px solid #E2E8F0; border-top: none; text-align: center; font-size: 0.8rem;">
+                        Sem pendências críticas para este período.
+                    </div>
+                """, unsafe_allow_html=True)
+            else:
+                for item in items:
+                    st.markdown(f"""
+                        <div class="glass-card" style="margin-bottom: 10px; padding: 12px; border-left: 3px solid {section['color']} !important; background: white; border-top: none;">
+                            <p style="color: {section['color']}; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{item.domain}</p>
+                            <p style="font-size: 0.85rem; font-weight: 700; color: #1E293B; margin-bottom: 4px;">{item.action}</p>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 8px;">
+                                <span style="font-size: 0.7rem; color: #64748B;">Impacto: <b>{item.impact}</b></span>
+                                <span style="font-size: 0.7rem; color: #64748B;">Esforço: {item.effort}</span>
+                            </div>
+                        </div>
+                    """, unsafe_allow_html=True)
 
-    st.subheader("🚀 Recommended Actions (Strategic Roadmap)")
-    st.markdown("""
-    <div class="glass-card">
-        <table style="width:100%; border-collapse: collapse;">
-            <tr style="border-bottom: 2px solid #E2E8F0;">
-                <th style="text-align: left; padding: 12px; color: #475569;">Priority</th>
-                <th style="text-align: left; padding: 12px; color: #475569;">Action Item</th>
-                <th style="text-align: left; padding: 12px; color: #475569;">Impact</th>
-                <th style="text-align: left; padding: 12px; color: #475569;">Est. Effort</th>
-            </tr>
-            <tr style="border-bottom: 1px solid #F1F5F9;">
-                <td style="padding: 12px;"><span style="background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">High</span></td>
-                <td style="padding: 12px; color: #1E293B; font-weight: 500;">Implement Model Inventory Tracking (MAP 1.1)</td>
-                <td style="padding: 12px; color: #334155;">Critical Risk Reduction</td>
-                <td style="padding: 12px; color: #334155;">2 Weeks</td>
-            </tr>
-            <tr style="border-bottom: 1px solid #F1F5F9;">
-                <td style="padding: 12px;"><span style="background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">High</span></td>
-                <td style="padding: 12px; color: #1E293B; font-weight: 500;">Define AI Acceptable Use Policy (GOVERN 2.3)</td>
-                <td style="padding: 12px; color: #334155;">Governance Baseline</td>
-                <td style="padding: 12px; color: #334155;">1 Week</td>
-            </tr>
-            <tr>
-                <td style="padding: 12px;"><span style="background: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Medium</span></td>
-                <td style="padding: 12px; color: #1E293B; font-weight: 500;">Automate Drift Detection (MEASURE 2.1)</td>
-                <td style="padding: 12px; color: #334155;">Operational Stability</td>
-                <td style="padding: 12px; color: #334155;">1 Month</td>
-            </tr>
-        </table>
-    </div>
-    """, unsafe_allow_html=True)
+    # === ROW 4: MATURITY EVOLUTION ===
+    st.markdown("---")
+    st.subheader("📈 Maturity Evolution & Projections")
+    
+    # Simulate history for now
+    history_data = pd.DataFrame({
+        'date': ['2025-Q1', '2025-Q2', '2025-Q3', 'Snapshot Atual'],
+        'score': [45, 52, 58, overall['score'] * 100]
+    })
+    fig_evol = charts.plot_maturity_evolution_chart(history_data)
+    st.plotly_chart(fig_evol, use_container_width=True)
 
     # === REPORT GENERATION ===
     if 'fig_gauge' in locals() and 'fig_radar' in locals():
