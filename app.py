@@ -92,15 +92,14 @@ st.sidebar.markdown("""
 # Custom styled radio buttons
 with st.sidebar:
     st.markdown("### NAVIGATION")
-    # Determine default index based on session state override
-    nav_options = [i18n.t("dashboard_tab"), i18n.t("assessment_tab"), i18n.t("evidence_tab"), i18n.t("roi_tab")]
+    # Navigation Section
+    nav_options = [i18n.t("dashboard_tab"), i18n.t("assessment_tab"), i18n.t("evidence_tab")]
     
     # Internal mapping to keep logic decoupled from translated strings
     nav_map = {
         i18n.t("dashboard_tab"): "Executive Dashboard",
         i18n.t("assessment_tab"): "Assessment",
-        i18n.t("evidence_tab"): "Evidence Locker",
-        i18n.t("roi_tab"): "ROI Calculator"
+        i18n.t("evidence_tab"): "Evidence Locker"
     }
     
     default_ix = 0
