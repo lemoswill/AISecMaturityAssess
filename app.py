@@ -187,7 +187,7 @@ if theme_choice != st.session_state['ui_style']:
 # --- Main Content ---
 
 if page == "Evidence Locker":
-    ui.display_header("Evidence Locker", "Upload documents to enable AI Auto-Assessment")
+    ui.display_header(i18n.t("evidence_tab"), i18n.t("evidence_subtitle"))
     
     # 1. AI Provider Configuration
     st.markdown("""<div class="glass-card" style="padding: 2rem; margin-top: 1rem; border-left: 6px solid #4F46E5 !important;">
@@ -1160,31 +1160,3 @@ elif page == "Executive Dashboard":
                 mime="text/csv",
             )
 
-elif page == "Evidence Locker":
-    ui.display_header("Evidence Locker", "Manage your uploaded documents")
-    
-    # File uploader
-    uploaded_files = st.file_uploader("Upload evidence documents (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
-    
-    if uploaded_files:
-        for uploaded_file in uploaded_files:
-            # Save the file
-            file_path = evidence.save_evidence_file(uploaded_file)
-            st.success(f"Uploaded: {uploaded_file.name}")
-    
-    st.markdown("---")
-    st.subheader("Current Evidence Files")
-    
-    files = evidence.list_evidence_files()
-    if not files:
-        st.info("No evidence files uploaded yet.")
-    else:
-        for f in files:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"📄 {f}")
-            with col2:
-                if st.button("Delete", key=f"delete_{f}"):
-                    evidence.delete_evidence_file(f)
-                    st.success(f"Deleted {f}")
-                    st.rerun()
