@@ -7,7 +7,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import pandas as pd
 import datetime
-from modules import ui, storage, data, evidence, ai_engine, mappings, charts, reporting, roi
+from modules import ui, storage, data, evidence, ai_engine, mappings, charts, reporting, roi, i18n
 
 # --- Configuration ---
 st.set_page_config(
@@ -93,18 +93,33 @@ st.sidebar.markdown("""
 with st.sidebar:
     st.markdown("### NAVIGATION")
     # Determine default index based on session state override
-    nav_options = ["Executive Dashboard", "Assessment", "Evidence Locker"]
+    nav_options = [i18n.t("dashboard_tab"), i18n.t("assessment_tab"), i18n.t("evidence_tab"), i18n.t("roi_tab")]
+    
+    # Internal mapping to keep logic decoupled from translated strings
+    nav_map = {
+        i18n.t("dashboard_tab"): "Executive Dashboard",
+        i18n.t("assessment_tab"): "Assessment",
+        i18n.t("evidence_tab"): "Evidence Locker",
+        i18n.t("roi_tab"): "ROI Calculator"
+    }
+    
     default_ix = 0
     if st.session_state.get('nav_override'):
-        try:
-            default_ix = nav_options.index(st.session_state['nav_override'])
-            # Clear it so it doesn't stick
-            del st.session_state['nav_override']
-        except:
-            pass
-            
-    page = st.radio("Go to", nav_options, index=default_ix, key="sidebar_nav", label_visibility="collapsed")
-        
+        # Map internal name back to translated name for radio index
+        rev_map = {v: k for k, v in nav_map.items()}
+        target_nav_str = rev_map.get(st.session_state['nav_override'])
+        if target_nav_str in nav_options:
+            default_ix = nav_options.index(target_nav_str)
+        del st.session_state['nav_override']
+
+    page_selected = st.radio(
+        "Navigation", 
+        nav_options, 
+        index=default_ix, 
+        label_visibility="collapsed"
+    )
+    page = nav_map[page_selected]
+    
     st.divider()
     st.markdown("---")
 
@@ -141,7 +156,19 @@ st.sidebar.markdown("""
 """, unsafe_allow_html=True)
 
 # --- Style & Appearance ---
-st.sidebar.markdown('<p style="color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem;">Appearance Settings</p>', unsafe_allow_html=True)
+st.sidebar.markdown(f'<p style="color: #64748B; font-size: 0.7rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 1rem;">{i18n.t("sidebar_settings")}</p>', unsafe_allow_html=True)
+
+lang_choice = st.sidebar.radio(
+    i18n.t("lang_selector"),
+    ["English", "Português (Brasil)"],
+    index=0 if st.session_state.get('lang', 'en') == "en" else 1,
+    horizontal=True,
+    label_visibility="collapsed"
+)
+new_lang = "en" if lang_choice == "English" else "pt"
+if new_lang != st.session_state.get('lang'):
+    st.session_state['lang'] = new_lang
+    st.rerun()
 
 theme_choice = st.sidebar.radio(
     "Select Interface Style",
@@ -384,9 +411,9 @@ if page == "Assessment":
 
     # --- Render Sub-Tabs (State-Controlled for Programmatic Loading) ---
     sub_tabs = {
-        "Enterprise": "🏛️ Enterprise",
-        "Cloud": "☁️ Solutions Cloud",
-        "SaaS": "📦 Solutions SaaS"
+        "Enterprise": i18n.t("tab_enterprise"),
+        "Cloud": i18n.t("tab_cloud"),
+        "SaaS": i18n.t("tab_saas")
     }
     
     # Initialize session state for sub-tab selection if not present
@@ -462,7 +489,7 @@ if page == "Assessment":
                     "Choose NIST Function to Analyze",
                     available_domains,
                     key=f"sel_dom_{scope_key}_{type_key}",
-                    format_func=lambda x: f"{x} - {data.NIST_FUNCTIONS[x]}",
+                    format_func=lambda x: f"{x} - {data.get_nist_functions()[x]}",
                     label_visibility="collapsed"
                 )
             
@@ -482,20 +509,20 @@ if page == "Assessment":
         st.markdown("---")
     
         # --- Maturity Journey (Phase Tracker) ---
-        st.markdown("""<h3 style="margin-bottom: 1.5rem; display: flex; align-items: center; gap: 8px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-            Maturity Journey Phase
+            {i18n.t("journey_header")}
         </h3>""", unsafe_allow_html=True)
         
-        wave_names = list(data.MATURITY_WAVES.values())
-        wave_options = ["All Waves"] + wave_names
+        waves = data.get_maturity_waves()
+        wave_names = list(waves.values())
+        wave_options = [i18n.t("all_waves")] + wave_names
         
         # Load CSS (already loaded globally, but ensuring scope)
         
         col_wave, _ = st.columns([1, 2])
         with col_wave:
             selected_wave_label = st.selectbox(
-                "Current Phase",
+                i18n.t("phase_label"),
                 wave_options,
                 index=1,
                 key=f"wave_sel_{scope_key}_{type_key}",
@@ -503,16 +530,16 @@ if page == "Assessment":
             )
         
         # Local wave filter logic
-        if selected_wave_label == "All Waves":
+        if selected_wave_label == i18n.t("all_waves"):
             selected_wave_id = None
         else:
-            selected_wave_id = next(k for k, v in data.MATURITY_WAVES.items() if v == selected_wave_label)
+            selected_wave_id = next(k for k, v in waves.items() if v == selected_wave_label)
         
         # --- Project Name & Progress Indicator ---
         col_name, col_progress = st.columns([2, 1])
         
         with col_name:
-            project_name = st.text_input("Project / Product Name", placeholder="e.g. Finance Chatbot v2", key=f"proj_name_{scope_key}_{type_key}")
+            project_name = st.text_input(i18n.t("project_name_label"), placeholder=i18n.t("project_name_placeholder"), key=f"proj_name_{scope_key}_{type_key}")
         
         with col_progress:
             total_controls = 0
@@ -541,7 +568,7 @@ if page == "Assessment":
             completion_pct = (completed_controls / total_controls * 100) if total_controls > 0 else 0
             
             st.metric(
-                label=f"Progress ({selected_wave_label})", 
+                label=f"{i18n.t('progress_label')} ({selected_wave_label})", 
                 value=f"{completed_controls}/{total_controls}", 
                 delta=f"{completion_pct:.0f}%",
                 delta_color="normal"
@@ -549,7 +576,7 @@ if page == "Assessment":
             st.progress(completion_pct / 100)
         
         # --- Save & Download Button ---
-        if st.button("💾 Save & Download Report", key=f"save_btn_{scope_key}_{type_key}", type="primary", width='stretch'):
+        if st.button(i18n.t("save_btn"), key=f"save_btn_{scope_key}_{type_key}", type="primary", width='stretch'):
             if not project_name:
                 st.error("⚠️ Please enter a project name before saving.")
             else:
@@ -674,7 +701,7 @@ if page == "Assessment":
         
         for i, func in enumerate(active_data):
             with func_tabs[i]:
-                st.markdown(f"### {func}: {data.NIST_FUNCTIONS.get(func, '')}")
+                st.markdown(f"### {func}: {data.get_nist_functions().get(func, '')}")
                 
                 # Bulk Button (Per-Tab) is redundant with Hero but kept for UX
                 
