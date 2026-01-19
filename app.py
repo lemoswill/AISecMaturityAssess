@@ -865,7 +865,7 @@ elif page == "Executive Dashboard":
             }
             meta = {
                 'org': st.session_state.get('project_name', 'My Organization'),
-                'date': sel_row['date'] if 'sel_row' in locals() else datetime.date.today().strftime("%Y-%m-%d"),
+                'date': sel_row['timestamp'] if 'sel_row' in locals() else datetime.date.today().strftime("%Y-%m-%d"),
                 'scope': st.session_state.get('scope_mode', 'Organization')
             }
             
