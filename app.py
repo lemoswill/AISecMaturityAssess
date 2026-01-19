@@ -295,21 +295,33 @@ if page == "Assessment":
 </style>
 """, unsafe_allow_html=True)
 
-    scope_tabs = st.tabs(["🏛️ Enterprise", "☁️ Solutions Cloud", "📦 Solutions SaaS"])
+    # --- Render Sub-Tabs (State-Controlled for Programmatic Loading) ---
+    sub_tabs = {
+        "Enterprise": "🏛️ Enterprise",
+        "Cloud": "☁️ Solutions Cloud",
+        "SaaS": "📦 Solutions SaaS"
+    }
     
-    current_scope = "org"
-    current_type = "none"
+    # Initialize session state for sub-tab selection if not present
+    if 'assessment_tab_selection' not in st.session_state:
+        st.session_state['assessment_tab_selection'] = "Enterprise"
+        
+    # Visual Selector for "Tabs"
+    selected_sub_tab_key = st.radio(
+        "Assessment Category",
+        options=list(sub_tabs.keys()),
+        index=list(sub_tabs.keys()).index(st.session_state.get('assessment_tab_selection', 'Enterprise')),
+        format_func=lambda x: sub_tabs[x],
+        horizontal=True,
+        key="assessment_tab_selector", # Unique key
+        label_visibility="collapsed"
+    )
+    # Sync back to state
+    st.session_state['assessment_tab_selection'] = selected_sub_tab_key
     
-    # We will determine scope/type based on which tab is rendered.
-    # Note: Streamlit executes ALL tabs. Use a unified render function or logic block.
-    # To avoid triple-executing heavy logic, we can define the active context *before* rendering,
-    # but st.tabs returns containers. We must put content *inside* the tab context.
+    st.markdown("<br>", unsafe_allow_html=True)
     
-    selected_tab_idx = 0 
-    # Logic: We can't easily know 'which tab is active' in Python without a separate variable or component.
-    # However, standard `with tab:` Just Works™ for layout.
-    # We will wrap the core assessment rendering in a function.
-    
+    # Logic: We will wrap the core assessment rendering in a function.
     def render_assessment_view(scope_key, type_key, label_override):
         # Update Session State for persistence (used in sidebar etc)
         # Note: This might jitter if multiple tabs run. 
@@ -646,17 +658,19 @@ if page == "Assessment":
                 if not has_visible_controls:
                     st.warning(f"No visible controls for current wave.")
 
-    # --- Render Tabs ---
-    with scope_tabs[0]:
-        st.session_state['scope_mode'] = 'Organization' # Sync for other components
+    # --- Render Sub-Tab Body ---
+    tab_sel = st.session_state.get('assessment_tab_selection', 'Enterprise')
+    
+    if tab_sel == "Enterprise":
+        st.session_state['scope_mode'] = 'Organization'
         render_assessment_view("org", "none", "Enterprise")
         
-    with scope_tabs[1]:
+    elif tab_sel == "Cloud":
         st.session_state['scope_mode'] = 'Project'
         st.session_state['project_type_sel'] = 'Cloud'
         render_assessment_view("project", "cloud", "Solutions Cloud")
 
-    with scope_tabs[2]:
+    elif tab_sel == "SaaS":
         st.session_state['scope_mode'] = 'Project' 
         st.session_state['project_type_sel'] = 'SaaS'
         render_assessment_view("project", "saas", "Solutions SaaS")
@@ -729,8 +743,11 @@ elif page == "Executive Dashboard":
                              # For MVP, restoring Scores is the critical part.
                     
                     st.session_state['responses'] = new_responses
-                    target_tab = "Enterprise" if sc.lower() == 'org' else f"Solutions {pt.title()}"
-                    st.toast(f"Assessment Loaded! Please check the '{target_tab}' tab.")
+                    target_tab = "Enterprise" if sc.lower() == 'org' else pt.title()
+                    # Force the correct sub-tab to open
+                    st.session_state['assessment_tab_selection'] = target_tab
+                    
+                    st.toast(f"Assessment Loaded! Opening '{target_tab}' assessment form.")
                     # Safe Navigation Switch
                     st.session_state['nav_override'] = "Assessment"
                     st.rerun()
