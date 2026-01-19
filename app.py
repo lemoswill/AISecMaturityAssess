@@ -553,17 +553,12 @@ if page == "Assessment":
                         
                         total_controls += 1
                         unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
-                        val = st.session_state.get(unique_id, 0)
                         
-                        if isinstance(val, int) and val > 0:
+                        # Fix: Check the persistent 'responses' dict first
+                        score_num = st.session_state.get('responses', {}).get(unique_id, 0)
+                        
+                        if score_num > 0:
                             completed_controls += 1
-                        elif isinstance(val, str) and "(" in val:
-                            try:
-                                score_num = int(val.split('(')[-1].strip(')'))
-                                if score_num > 0:
-                                    completed_controls += 1
-                            except:
-                                pass
             
             completion_pct = (completed_controls / total_controls * 100) if total_controls > 0 else 0
             
@@ -585,13 +580,9 @@ if page == "Assessment":
                     for subcat_key in active_data[func]:
                         for control in active_data[func][subcat_key]['csa_controls']:
                             unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
-                            val = st.session_state.get(unique_id, 0)
                             
-                            score = 0
-                            if isinstance(val, int): score = val
-                            elif isinstance(val, str) and "(" in val:
-                                try: score = int(val.split('(')[-1].strip(')'))
-                                except: score = 0
+                            # Use persistent dict
+                            score = st.session_state.get('responses', {}).get(unique_id, 0)
                             
                             ai_data = st.session_state.get('ai_results', {}).get(unique_id, {})
                             final_responses.append({
@@ -612,12 +603,7 @@ if page == "Assessment":
                     for subcat_key in active_data[func]:
                         for control in active_data[func][subcat_key]['csa_controls']:
                             unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
-                            val = st.session_state.get(unique_id, 0)
-                            score = 0
-                            if isinstance(val, int): score = val
-                            elif isinstance(val, str) and "(" in val:
-                                try: score = int(val.split('(')[-1].strip(')'))
-                                except: pass
+                            score = st.session_state.get('responses', {}).get(unique_id, 0)
                             func_total += score
                             func_count += 1
                     
@@ -725,16 +711,8 @@ if page == "Assessment":
                     responded_count = 0
                     for c in visible_controls:
                         unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{c['id']}"
-                        val = st.session_state.get(unique_id, 0)
-                        score = 0
-                        if isinstance(val, int): 
-                            score = val
-                            if val > 0: responded_count += 1
-                        elif isinstance(val, str):
-                            try: 
-                                score = int(val.split('(')[-1].strip(')'))
-                                if score > 0: responded_count += 1
-                            except: pass
+                        score = st.session_state.get('responses', {}).get(unique_id, 0)
+                        if score > 0: responded_count += 1
                         current_subcat_total += score
                     subcat_avg = current_subcat_total / len(visible_controls) if visible_controls else 0
                     total_controls_in_subcat = len(visible_controls)
