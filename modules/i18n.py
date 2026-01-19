@@ -43,7 +43,17 @@ STRINGS = {
         "target_label": "Target",
         "leading_pillar": "Leading pillar with",
         "fastest_path": "Fastest path to improve",
-        "posture_label": "posture"
+        "posture_label": "posture",
+        "briefing_title": "Strategic Briefing",
+        "label_maturity": "Maturity Level",
+        "label_risks": "Open Risks",
+        "label_compliance": "Compliance",
+        "label_reduction": "Risk Reduction",
+        "sub_current_status": "Current Status",
+        "sub_remediate": "To Remediate",
+        "sub_aligned": "NIST Aligned",
+        "sub_savings": "Annual Savings",
+        "gauge_title": "Security Maturity Score"
     },
     "pt": {
         "app_title": "Avaliação de Maturidade em Segurança de IA",
@@ -86,7 +96,17 @@ STRINGS = {
         "target_label": "Meta",
         "leading_pillar": "Pilar líder com",
         "fastest_path": "Caminho mais rápido para melhorar",
-        "posture_label": "da postura"
+        "posture_label": "da postura",
+        "briefing_title": "Briefing Estratégico",
+        "label_maturity": "Nível de Maturidade",
+        "label_risks": "Riscos Abertos",
+        "label_compliance": "Conformidade",
+        "label_reduction": "Redução de Risco",
+        "sub_current_status": "Status Atual",
+        "sub_remediate": "Para Remediar",
+        "sub_aligned": "Alinhado ao NIST",
+        "sub_savings": "Economia Anual",
+        "gauge_title": "Pontuação de Maturidade de Segurança"
     }
 }
 
