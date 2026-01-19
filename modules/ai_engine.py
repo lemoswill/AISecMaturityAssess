@@ -171,6 +171,51 @@ class AIEngine:
         except Exception as e:
             return False, f"Validation failed: {str(e)}"
 
+    def chat(self, user_input, context_data, api_key, provider="OpenAI", model_name=None):
+        """
+        General chat interface with assessment context.
+        """
+        # 1. Retrieve Context from docs
+        docs = self.vector_store.similarity_search(user_input, k=3)
+        context_str = "\n\n".join([f"SOURCE ({d.metadata['source']}): {d.page_content}" for d in docs])
+        
+        # 2. Build Prompt
+        prompt = f"""
+        You are the 'AI Security Precision Assistant'. 
+        Your goal is to help the user navigate AI Security Maturity according to NIST AI RMF and CSA AICM.
+        
+        ASSESSMENT CONTEXT:
+        {context_data}
+        
+        RELEVANT DOCUMENTS:
+        {context_str}
+        
+        USER QUESTION:
+        {user_input}
+        
+        Provide professional, concise, and technically accurate advice. 
+        If specific gaps are mentioned in the context, help the user understand how to remediate them.
+        """
+        
+        try:
+            llm = None
+            if provider == "OpenAI":
+                llm = ChatOpenAI(api_key=api_key, model=model_name if model_name else "gpt-3.5-turbo", temperature=0.7)
+            elif provider == "Gemini":
+                llm = ChatGoogleGenerativeAI(google_api_key=api_key, model=model_name if model_name else "gemini-pro", temperature=0.7, convert_system_message_to_human=True)
+            elif provider == "Perplexity":
+                llm = ChatOpenAI(api_key=api_key, base_url="https://api.perplexity.ai", model=model_name if model_name else "sonar", temperature=0.7)
+            elif provider == "Ollama":
+                llm = ChatOllama(base_url=api_key, model=model_name if model_name else "deepseek-r1", temperature=0.7)
+            
+            if not llm:
+                return "Error: Unsupported provider"
+                
+            response = llm.invoke([HumanMessage(content=prompt)])
+            return response.content
+        except Exception as e:
+            return f"Error: {str(e)}"
+
     def list_local_models(self, base_url="http://localhost:11434"):
         """Fetches list of available models from local Ollama instance"""
         import urllib.request

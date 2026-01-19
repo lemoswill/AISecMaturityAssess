@@ -616,3 +616,65 @@ def render_control_input(control, unique_key, ai_feedback=None):
         )
         
         return options.index(selected_label)
+
+# --- v2 Modern UI Components ---
+
+def render_maturity_badge(level: str):
+    """Renders a color-coded maturity level badge."""
+    colors = {
+        "Optimized (4)": ("#10B981", "#ECFDF5"),
+        "Measured (3)": ("#3B82F6", "#EFF6FF"),
+        "Managed (2)": ("#F59E0B", "#FFFBEB"),
+        "Defined (1)": ("#6366F1", "#EEF2FF"),
+        "Initial (0)": ("#EF4444", "#FEF2F2"),
+        "Inexistent": ("#94A3B8", "#F8FAFC")
+    }
+    
+    color, bg = colors.get(level, ("#64748B", "#F1F5F9"))
+    
+    st.markdown(f"""
+        <div style="background: {bg}; color: {color}; 
+                    padding: 4px 12px; border-radius: 9999px; 
+                    font-size: 0.75rem; font-weight: 700; 
+                    display: inline-block; border: 1px solid {color}40;">
+            {level.upper()}
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_criticality_badge(level: str):
+    """Renders a criticality level badge (Low, Medium, High, Critical)."""
+    colors = {
+        "Critical": ("#7F1D1D", "#FEF2F2", "🔥"),
+        "High": ("#991B1B", "#FEF2F2", "🔴"),
+        "Medium": ("#92400E", "#FFFBEB", "🟡"),
+        "Low": ("#166534", "#F0FDF4", "🟢")
+    }
+    
+    color, bg, icon = colors.get(level, ("#64748B", "#F1F5F9", "⚪"))
+    
+    st.markdown(f"""
+        <div style="background: {bg}; color: {color}; 
+                    padding: 2px 8px; border-radius: 4px; 
+                    font-size: 0.7rem; font-weight: 800; 
+                    display: inline-flex; align-items: center; gap: 4px;
+                    border: 1px solid {color}30;">
+            <span>{icon}</span> {level.upper()}
+        </div>
+    """, unsafe_allow_html=True)
+
+def render_breadcrumbs(path: List[str]):
+    """Renders a visual breadcrumb path."""
+    items = []
+    for i, p in enumerate(path):
+        is_last = (i == len(path) - 1)
+        font_weight = "700" if is_last else "500"
+        color = "#1E293B" if is_last else "#64748B"
+        items.append(f'<span style="font-weight: {font_weight}; color: {color};">{p}</span>')
+    
+    separator = '<span style="color: #CBD5E1; margin: 0 8px;">/</span>'
+    breadcrumb_html = f"""
+        <div style="display: flex; align-items: center; margin-bottom: 20px; font-size: 0.85rem;">
+            {separator.join(items)}
+        </div>
+    """
+    st.markdown(breadcrumb_html, unsafe_allow_html=True)

@@ -27,7 +27,7 @@ def generate_html_report(metrics, charts, details_df, metadata):
     
     # 2. Prepare Data Table HTML
     # Select cols
-    cols = ['category', 'question_id', 'Requirement', 'score', 'notes', 'NIST GenAI (600-1)', 'ISO 27001']
+    cols = ['category', 'question_id', 'Requirement', 'score', 'notes', 'NIST GenAI (600-1)', 'ISO 27001', 'EU AI Act']
     # Renaming
     rename = {
         'category': 'Function',
