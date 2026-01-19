@@ -35,7 +35,15 @@ STRINGS = {
         "phase_label": "Current Phase",
         "progress_label": "Progress",
         "project_name_label": "Project / Product Name",
-        "project_name_placeholder": "e.g. Finance Chatbot v2"
+        "project_name_placeholder": "e.g. Finance Chatbot v2",
+        "insight_posture": "Strategic Posture",
+        "insight_strength": "Strategic Strength",
+        "insight_quick_win": "Priority Quick Win",
+        "current_label": "Current",
+        "target_label": "Target",
+        "leading_pillar": "Leading pillar with",
+        "fastest_path": "Fastest path to improve",
+        "posture_label": "posture"
     },
     "pt": {
         "app_title": "Avaliação de Maturidade em Segurança de IA",
@@ -70,7 +78,15 @@ STRINGS = {
         "phase_label": "Fase Atual",
         "progress_label": "Progresso",
         "project_name_label": "Nome do Projeto / Produto",
-        "project_name_placeholder": "ex: Chatbot Financeiro v2"
+        "project_name_placeholder": "ex: Chatbot Financeiro v2",
+        "insight_posture": "Postura Estratégica",
+        "insight_strength": "Destaque Estratégico",
+        "insight_quick_win": "Ação Prioritária (Quick Win)",
+        "current_label": "Atual",
+        "target_label": "Meta",
+        "leading_pillar": "Pilar líder com",
+        "fastest_path": "Caminho mais rápido para melhorar",
+        "posture_label": "da postura"
     }
 }
 
