@@ -48,6 +48,7 @@ def plot_radar_chart(categories, scores):
 def plot_bar_chart(data_dict):
     """
     Generate a Silicon Precision Bar Chart with professional gradients.
+    """
     if not data_dict:
         return go.Figure()
 
