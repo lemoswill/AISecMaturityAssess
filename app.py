@@ -697,6 +697,7 @@ elif page == "Executive Dashboard":
         category_scores = {'GOVERN': 3.8, 'MAP': 3.2, 'MEASURE': 2.9, 'MANAGE': 3.5}
         critical_gaps = 12
         compliance_pct = 68
+        details_df = pd.DataFrame() # Initialize empty for safety
         
     # === ROW 1: HEADLINE METRICS ===
     # Gauge + 3 KPI Cards
@@ -784,6 +785,44 @@ elif page == "Executive Dashboard":
         </table>
     </div>
     """, unsafe_allow_html=True)
+
+    # === ROW 4: DETAILED AUDIT LOG ===
+    if 'details_df' in locals() and not details_df.empty:
+        st.markdown("---")
+        with st.expander("🔍 View Detailed Assessment Log & Responses", expanded=False):
+            st.info(f"Showing detailed records for: **{selected_option if 'selected_option' in locals() else 'Detailed View'}**")
+            
+            # Prepare DataFrame for Display
+            display_df = details_df.copy()
+        display_df = display_df[['category', 'question_id', 'score', 'response', 'evidence']]
+        display_df.columns = ['Function', 'Control ID', 'Score', 'Response/Notes', 'Evidence']
+        
+        # Style
+        def color_score(val):
+            color = '#EF4444' if val < 3 else '#10B981' if val >= 3 else '#3B82F6'
+            return f'color: {color}; font-weight: bold'
+            
+        st.dataframe(
+            display_df.style.map(color_score, subset=['Score']),
+            use_container_width=True,
+            column_config={
+                "Score": st.column_config.NumberColumn(
+                    "Maturity (0-5)",
+                    help="Score 0 to 5",
+                    format="%d ⭐"
+                ),
+                "Evidence": st.column_config.LinkColumn("Evidence Link")
+            }
+        )
+        
+        # Export Button
+        csv = display_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Detailed CSV",
+            data=csv,
+            file_name=f"assessment_details_{selected_id}.csv",
+            mime="text/csv",
+        )
 
 elif page == "Evidence Locker":
     ui.display_header("Evidence Locker", "Manage your uploaded documents")
