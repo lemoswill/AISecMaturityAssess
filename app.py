@@ -435,6 +435,7 @@ if page == "Assessment":
                 delta=f"{completion_pct:.0f}%",
                 delta_color="normal"
             )
+            st.progress(completion_pct / 100)
         
         # --- Save & Download Button ---
         if st.button("💾 Save & Download Report", key=f"save_btn_{scope_key}_{type_key}", type="primary", use_container_width=True):
@@ -730,6 +731,9 @@ elif page == "Executive Dashboard":
         compliance_pct = 68
         details_df = pd.DataFrame() # Initialize empty for safety
         
+    # Calculate ROI based on score
+    roi_results = roi.calculate_roi(total_avg_score)
+    
     # === ROW 1: HEADLINE METRICS ===
     # Gauge + 3 KPI Cards
     col_gauge, col_kpi = st.columns([1.5, 2.5])
@@ -741,8 +745,8 @@ elif page == "Executive Dashboard":
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_kpi:
-        # 3 KPI Cards Layout
-        kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
+        # 4 KPI Cards Layout
+        kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
         
         with kpi_col1:
             st.markdown(f"""
@@ -770,14 +774,23 @@ elif page == "Executive Dashboard":
                     <p style="color: #64748B; font-size: 0.8rem;">NIST Aligned</p>
                 </div>
             """, unsafe_allow_html=True)
+
+        with kpi_col4:
+            st.markdown(f"""
+                <div class="glass-card" style="text-align: center; border-top: 4px solid #3B82F6 !important;">
+                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Financial Risk Reduction</p>
+                    <h2 style="color: #3B82F6; font-size: 1.5rem; margin: 10px 0;">${roi_results['estimated_savings']/1000000:.1f}M</h2>
+                    <p style="color: #3B82F6; font-size: 0.8rem; font-weight: 600;">ALE Reduction</p>
+                </div>
+            """, unsafe_allow_html=True)
             
     # === ROW 2: DETAILED ANALYSIS ===
     col_radar, col_bench = st.columns([1, 1])
     
     with col_radar:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.markdown("### �️ NIST AI RMF Profile")
-        fig_radar = charts.plot_radar_chart(category_scores, list(category_scores.values()))
+        st.markdown("### 🕸️ NIST AI RMF Profile")
+        fig_radar = charts.plot_radar_chart(list(category_scores.keys()), list(category_scores.values()))
         st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -788,7 +801,16 @@ elif page == "Executive Dashboard":
         st.plotly_chart(fig_bench, use_container_width=True, config={'displayModeBar': False})
         st.markdown('</div>', unsafe_allow_html=True)
 
-    # === ROW 3: STRATEGIC ROADMAP (Simple Table for MVP) ===
+    # === ROW 3: RISK MATRIX ===
+    st.subheader("🎯 Priority Risk Matrix")
+    fig_risk = charts.plot_risk_heatmap(details_df)
+    if fig_risk:
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.plotly_chart(fig_risk, use_container_width=True)
+        st.markdown('</div>', unsafe_allow_html=True)
+    else:
+        st.success("✅ No critical gaps identified! Risk exposure is minimal.")
+
     st.subheader("🚀 Recommended Actions (Strategic Roadmap)")
     st.markdown("""
     <div class="glass-card">
@@ -832,12 +854,14 @@ elif page == "Executive Dashboard":
                 'score': total_avg_score,
                 'maturity': maturity_level,
                 'gaps': critical_gaps,
-                'compliance': compliance_pct
+                'compliance': compliance_pct,
+                'savings': roi_results.get('estimated_savings', 0)
             }
             charts_dict = {
                 'gauge': fig_gauge,
                 'radar': fig_radar,
-                'benchmark': fig_bench if 'fig_bench' in locals() else None
+                'benchmark': fig_bench if 'fig_bench' in locals() else None,
+                'risk': fig_risk if 'fig_risk' in locals() else None
             }
             meta = {
                 'org': st.session_state.get('project_name', 'My Organization'),
