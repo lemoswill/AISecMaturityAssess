@@ -695,12 +695,12 @@ elif page == "Executive Dashboard":
             with col_date:
                 st.write("") # Spacer
                 if st.button("✏️ Edit / Clone", help="Load this assessment to modify responses", use_container_width=True):
-                    # Load Data - Fix Key Mismatch
-                    st.session_state[f"proj_name_{sc}_{pt}"] = f"Copy of {sel_row['project_name']}"
-                    
                     # Set Scope (Legacy, mostly for sidebar info)
                     sc = sel_row.get('scope', 'org')
                     pt = sel_row.get('project_type', 'none')
+
+                    # Load Data - Fix Key Mismatch
+                    st.session_state[f"proj_name_{sc}_{pt}"] = f"Copy of {sel_row['project_name']}"
                     
                     if sc.lower() == 'org': st.session_state['scope_mode'] = 'Organization'
                     else: 
