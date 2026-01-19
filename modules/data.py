@@ -100,15 +100,21 @@ def get_total_controls():
                 count += len(ASSESSMENT_DATA[func][subcat]['csa_controls'])
     return count
 
+# Track current loaded language
+CURRENT_LOADED_LANG = None
+
 def get_controls_for_scope(scope="org", project_type="cloud"):
     """
     Returns a filtered view of ASSESSMENT_DATA based on scope.
-    scope: 'org' or 'project'
-    project_type: 'cloud' or 'saas' (only used if scope='project')
-    
-    Returns: Dict structure identical to ASSESSMENT_DATA but with filtered controls list.
+    Now reacts to language changes by reloading data if necessary.
     """
+    global CURRENT_LOADED_LANG
     
+    # Check if we need to reload due to language change
+    if i18n.get_lang() != CURRENT_LOADED_LANG:
+        load_data()
+        CURRENT_LOADED_LANG = i18n.get_lang()
+        
     target_tag = "org"
     if scope == "project":
         target_tag = f"project_{project_type}"
