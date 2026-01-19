@@ -206,7 +206,7 @@ if page == "Evidence Locker":
             st.session_state['api_key'] = new_key
             
             # Test Connection Button
-            if st.button("🔌 Test Connection", use_container_width=True):
+            if st.button("🔌 Test Connection", width='stretch'):
                 with st.spinner("Validating..."):
                     engine = ai_engine.get_engine()
                     success, msg = engine.validate_api_key(new_key, provider_clean, st.session_state['provider_models'].get(provider_clean))
@@ -276,7 +276,7 @@ if page == "Evidence Locker":
                     "Uploaded By": meta.get('uploaded_by', 'System')
                 })
             
-            st.dataframe(pd.DataFrame(metadata_list), use_container_width=True, hide_index=True)
+            st.dataframe(pd.DataFrame(metadata_list), width='stretch', hide_index=True)
         else:
             st.info("Knowledge base is empty.")
         
@@ -472,12 +472,12 @@ if page == "Assessment":
                 active_key = provider_keys.get(current_provider, st.session_state.get('api_key') if current_provider == 'OpenAI' else None)
                 
                 if active_key:
-                    if st.button(f"🚀 Analyze {selected_domain}", key=f"btn_analyze_{scope_key}_{type_key}", type="primary", use_container_width=True):
+                    if st.button(f"🚀 Analyze {selected_domain}", key=f"btn_analyze_{scope_key}_{type_key}", type="primary", width='stretch'):
                         st.session_state['trigger_bulk_assess'] = selected_domain
                         st.session_state['active_tab_context'] = (scope_key, type_key) # Track where we came from
                         st.rerun()
                 else:
-                    st.button("🔑 Key Required", key=f"btn_lock_{scope_key}_{type_key}", type="secondary", use_container_width=True, disabled=True)
+                    st.button("🔑 Key Required", key=f"btn_lock_{scope_key}_{type_key}", type="secondary", width='stretch', disabled=True)
         
         st.markdown("---")
     
@@ -549,7 +549,7 @@ if page == "Assessment":
             st.progress(completion_pct / 100)
         
         # --- Save & Download Button ---
-        if st.button("💾 Save & Download Report", key=f"save_btn_{scope_key}_{type_key}", type="primary", use_container_width=True):
+        if st.button("💾 Save & Download Report", key=f"save_btn_{scope_key}_{type_key}", type="primary", width='stretch'):
             if not project_name:
                 st.error("⚠️ Please enter a project name before saving.")
             else:
@@ -826,7 +826,7 @@ elif page == "Executive Dashboard":
             
             with col_date:
                 st.write("") # Spacer
-                if st.button("📋 Clone as New Scenario", help="Load this snapshot to create a new version or modify responses", use_container_width=True):
+                if st.button("📋 Clone as New Scenario", help="Load this snapshot to create a new version or modify responses", width='stretch'):
                     st.session_state['cloning_from'] = sel_row['project_name']
                     # Set Scope (Legacy, mostly for sidebar info)
                     sc = sel_row.get('scope', 'org')
@@ -919,7 +919,7 @@ elif page == "Executive Dashboard":
     with col_gauge:
         st.markdown('<div class="glass-card" style="height: 100%; display: flex; align-items: center; justify-content: center;">', unsafe_allow_html=True)
         fig_gauge = charts.plot_gauge_chart(total_avg_score)
-        st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fig_gauge, width='stretch', config={'displayModeBar': False})
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_kpi:
@@ -969,14 +969,14 @@ elif page == "Executive Dashboard":
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("### 🕸️ NIST AI RMF Profile")
         fig_radar = charts.plot_radar_chart(list(category_scores.keys()), list(category_scores.values()))
-        st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_bench:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("### 📊 Industry Benchmark")
         fig_bench = charts.plot_benchmark_chart(category_scores)
-        st.plotly_chart(fig_bench, use_container_width=True, config={'displayModeBar': False})
+        st.plotly_chart(fig_bench, width='stretch', config={'displayModeBar': False})
         st.markdown('</div>', unsafe_allow_html=True)
 
     # === ROW 3: RISK MATRIX ===
@@ -984,7 +984,7 @@ elif page == "Executive Dashboard":
     fig_risk = charts.plot_risk_heatmap(details_df)
     if fig_risk:
         st.markdown('<div class="glass-card">', unsafe_allow_html=True)
-        st.plotly_chart(fig_risk, use_container_width=True)
+        st.plotly_chart(fig_risk, width='stretch')
         st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.success("✅ No critical gaps identified! Risk exposure is minimal.")
@@ -1110,7 +1110,7 @@ elif page == "Executive Dashboard":
                 
             st.dataframe(
                 display_df.style.map(color_score, subset=['Score']) if 'Score' in display_df.columns else display_df,
-                use_container_width=True,
+                width='stretch',
                 column_config={
                     "Score": st.column_config.NumberColumn(
                         "Maturity (0-5)",
