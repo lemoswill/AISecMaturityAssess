@@ -21,6 +21,10 @@ def generate_html_report(metrics, charts, details_df, metadata):
     radar_html = charts['radar'].to_html(full_html=False, include_plotlyjs=False, config={'displayModeBar': False})
     bench_html = charts['benchmark'].to_html(full_html=False, include_plotlyjs=False, config={'displayModeBar': False})
     
+    risk_html = ""
+    if charts.get('risk'):
+        risk_html = charts['risk'].to_html(full_html=False, include_plotlyjs=False, config={'displayModeBar': False})
+    
     # 2. Prepare Data Table HTML
     # Select cols
     cols = ['category', 'question_id', 'Requirement', 'score', 'notes', 'NIST GenAI (600-1)', 'ISO 27001']
@@ -174,8 +178,8 @@ def generate_html_report(metrics, charts, details_df, metadata):
                 <span class="kpi-label">Critical Gaps</span>
             </div>
             <div class="kpi-card">
-                <span class="kpi-val">{metrics['compliance']}%</span>
-                <span class="kpi-label">Compliance</span>
+                <span class="kpi-val" style="color: #3B82F6">${metrics.get('savings', 0)/1000000:.1f}M</span>
+                <span class="kpi-label">Financial Risk Reduction</span>
             </div>
         </div>
         
@@ -193,6 +197,10 @@ def generate_html_report(metrics, charts, details_df, metadata):
              <div class="chart-box">
                 <h3 style="text-align: center; font-size: 14px; margin-top: 0;">Benchmark vs Industry</h3>
                 {bench_html}
+            </div>
+             <div class="chart-box">
+                <h3 style="text-align: center; font-size: 14px; margin-top: 0;">Risk Analysis: Impact vs Prob.</h3>
+                {risk_html}
             </div>
         </div>
         

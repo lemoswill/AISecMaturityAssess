@@ -189,3 +189,56 @@ def plot_benchmark_chart(your_scores, industry_scores=None):
     )
     
     return fig
+
+def plot_risk_heatmap(details_df):
+    """
+    Generate an interactive Risk Heatmap (Impact vs Probability).
+    """
+    if details_df.empty:
+        # Dummy data for Demo
+        risks = pd.DataFrame({
+            'ID': ['CO-1.1', 'DS-2.3', 'MG-4.1', 'GV-2.2'],
+            'Prob': [4, 3, 5, 2],
+            'Impact': [5, 4, 3, 4],
+            'Score': [1, 2, 0, 2]
+        })
+    else:
+        # Filter gaps (score < 3)
+        gaps = details_df[details_df['score'] < 3].copy()
+        if gaps.empty:
+            return None
+            
+        # Heuristic Logic
+        risks = pd.DataFrame({
+            'ID': gaps['question_id'],
+            'Prob': 5 - gaps['score'],
+            'Impact': [4 if c in ['GOVERN', 'MANAGE'] else 3 for c in gaps['category']],
+            'Score': gaps['score']
+        })
+
+    fig = px.scatter(
+        risks, x="Prob", y="Impact",
+        size=[15]*len(risks), color="Score",
+        hover_name="ID",
+        color_continuous_scale="RdYlGn",
+        range_x=[0.5, 5.5], range_y=[0.5, 5.5],
+        title="Risk Matrix: Impact vs Probability"
+    )
+
+    # Add background quadrants
+    fig.add_shape(type="rect", x0=0.5, y0=0.5, x1=3, y1=3, fillcolor="Green", opacity=0.1, layer="below")
+    fig.add_shape(type="rect", x0=3, y0=0.5, x1=5.5, y1=3, fillcolor="Yellow", opacity=0.1, layer="below")
+    fig.add_shape(type="rect", x0=0.5, y0=3, x1=3, y1=5.5, fillcolor="Orange", opacity=0.1, layer="below")
+    fig.add_shape(type="rect", x0=3, y0=3, x1=5.5, y1=5.5, fillcolor="Red", opacity=0.1, layer="below")
+
+    fig.update_layout(
+        xaxis_title="Probability",
+        yaxis_title="Impact",
+        coloraxis_showscale=False,
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=40, b=20),
+        height=400
+    )
+    
+    return fig
