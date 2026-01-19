@@ -7,7 +7,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import pandas as pd
 import datetime
-from modules import ui, storage, data, evidence, ai_engine, mappings, charts, reporting, roi, i18n
+from modules import ui, storage, data, evidence, ai_engine, mappings, charts, reporting, roi, i18n, scoring, adapter
 
 # --- Configuration ---
 st.set_page_config(
@@ -176,6 +176,46 @@ theme_choice = st.sidebar.radio(
     help="Toggle between different enterprise design profiles. Palo Alto Enterprise offers a distinct high-contrast professional look.",
     label_visibility="collapsed"
 )
+
+# --- AI Assistant (Sidebar persistent) ---
+st.sidebar.markdown("---")
+with st.sidebar.expander("🤖 AI PRECISION ASSISTANT", expanded=True):
+    st.markdown('<p style="font-size: 0.75rem; color: #64748B;">Expert advice on AI security gaps and remediation.</p>', unsafe_allow_html=True)
+    
+    # Initialize Chat History
+    if "messages" not in st.session_state:
+        st.session_state.messages = []
+
+    # Display Chat History
+    for message in st.session_state.messages:
+        with st.chat_message(message["role"]):
+            st.markdown(message["content"])
+
+    # Chat Input
+    if prompt := st.chat_input("Ask about your AI risk..."):
+        # Display user message
+        st.session_state.messages.append({"role": "user", "content": prompt})
+        with st.chat_message("user"):
+            st.markdown(prompt)
+
+        # Generate Context for AI
+        # Use v2 metrics if on Dashboard, otherwise general
+        v2_metrics = adapter.get_v2_metrics(st.session_state.get('responses', {}))
+        overall = adapter.get_overall_metrics(v2_metrics)
+        ctx = f"Maturity Level: {overall['maturity_level']} | Score: {overall['score']:.2f} | Gaps: {overall['critical_gaps']}"
+        
+        # Get AI Response
+        with st.chat_message("assistant"):
+            engine = ai_engine.get_engine()
+            provider = st.session_state.get('ai_provider', 'OpenAI')
+            api_key = st.session_state.get('provider_keys', {}).get(provider, st.session_state.get('api_key'))
+            
+            if api_key:
+                response = engine.chat(prompt, ctx, api_key, provider, st.session_state.get('provider_models', {}).get(provider))
+                st.markdown(response)
+                st.session_state.messages.append({"role": "assistant", "content": response})
+            else:
+                st.error("Please configure API Key in Evidence Locker.")
 
 if theme_choice != st.session_state['ui_style']:
     st.session_state['ui_style'] = theme_choice
@@ -505,6 +545,10 @@ if page == "Assessment":
                     else:
                         st.error(i18n.t("key_required_error"))
         
+        # --- v2 Breadcrumbs ---
+        domain_label = data.get_nist_functions().get(selected_domain if 'selected_domain' in locals() else "GOVERN", "Governance")
+        ui.render_breadcrumbs([label_override, domain_label])
+        
         st.markdown("---")
     
         # --- Maturity Journey (Phase Tracker) ---
@@ -731,6 +775,23 @@ if page == "Assessment":
                         for control in visible_controls:
                             unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{control['id']}"
                             
+                            # --- v2 Framework Mapping ---
+                            map_data = mappings.get_compliance_mapping(subcat_key)
+                            framework_html = ""
+                            if map_data:
+                                tags = []
+                                if map_data.get('nist_600_1'): tags.append(f"<b>NIST 600-1:</b> {map_data['nist_600_1']}")
+                                if map_data.get('iso_27001'): tags.append(f"<b>ISO 27001:</b> {map_data['iso_27001']}")
+                                if map_data.get('eu_ai_act'): tags.append(f"<b>EU AI Act:</b> {map_data['eu_ai_act']}")
+                                
+                                if tags:
+                                    framework_html = f"""
+                                        <div style="margin-bottom: 12px; font-size: 0.75rem; color: #64748B; background: #F1F5F9; padding: 6px 12px; border-radius: 6px; display: flex; flex-wrap: wrap; gap: 15px;">
+                                            {' | '.join(tags)}
+                                        </div>
+                                    """
+                            st.markdown(framework_html, unsafe_allow_html=True)
+
                             # AI Button
                             current_provider = st.session_state.get('ai_provider', 'OpenAI')
                             provider_keys = st.session_state.get('provider_keys', {})
@@ -1023,39 +1084,70 @@ elif page == "Executive Dashboard":
             
     # === ROW 2: DETAILED ANALYSIS ===
     st.markdown("---")
-    analysis_tabs = st.tabs([f"🕸️ {i18n.t('tab_nist_profile')}", f"🛡️ {i18n.t('tab_solutions_profile')}"])
+    # --- Persona-Based Dashboard (v2) ---
+    st.markdown(f"## 📊 {i18n.t('dashboard_tab')}")
     
-    with analysis_tabs[0]:
-        col_radar, col_bench = st.columns([1, 1])
-        with col_radar:
-            st.markdown(f"### 🕸️ {i18n.t('tab_nist_profile')}")
-            fig_radar = charts.plot_radar_chart(list(category_scores.keys()), list(category_scores.values()))
-            st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
+    # Calculate v2 Metrics using the Adapter
+    # We use the persistent responses from st.session_state
+    v2_metrics = adapter.get_v2_metrics(st.session_state.get('responses', {}))
+    overall = adapter.get_overall_metrics(v2_metrics)
+    
+    persona_tabs = st.tabs(["🏛️ Executive", "⚖️ GRC & Compliance", "🛠️ Specialist & Technical"])
+    
+    with persona_tabs[0]:
+        # --- EXECUTIVE VIEW ---
+        col_main, col_stats = st.columns([2, 1])
+        
+        with col_main:
+            st.markdown("### Strategic Maturity Posture")
+            # Global Radar Chart across NIST functions
+            radar_labels = [dm.domain_name.split(' (')[0] for dm in v2_metrics]
+            radar_values = [dm.score * 5 for dm in v2_metrics] # Scale to 0-5
+            fig_radar = charts.plot_radar_chart(radar_labels, radar_values)
+            st.plotly_chart(fig_radar, use_container_width=True)
+            
+        with col_stats:
+            st.markdown("### Key Technical Indicators")
+            # Maturity Gauge
+            st.metric("Overall Maturity", overall['maturity_level'], delta=f"{overall['score']*100:.1f}%")
+            st.info(f"**Insights:** {overall['total_questions']} controls evaluated. {overall['critical_gaps']} critical gaps identified.")
+            
+            # ROI Summary
+            roi_results = roi.calculate_ai_security_roi(overall['score'])
+            st.success(f"Est. Annual Savings: ${roi_results.get('estimated_savings', 0):,.0f}")
+
+    with persona_tabs[1]:
+        # --- GRC VIEW ---
+        st.markdown("### Compliance & Risk Matrix")
+        col_risk, col_bench = st.columns(2)
+        
+        with col_risk:
+            # Domain-level Bar Chart
+            domain_data = {dm.domain_id: dm.score for dm in v2_metrics}
+            fig_bar = charts.plot_bar_chart(domain_data)
+            st.plotly_chart(fig_bar, use_container_width=True)
             
         with col_bench:
-            st.markdown("### 📊 Industry Benchmark")
+            st.markdown("#### Industry Benchmarking")
+            category_scores = {dm.domain_id: dm.score * 5 for dm in v2_metrics}
             fig_bench = charts.plot_benchmark_chart(category_scores)
-            st.plotly_chart(fig_bench, width='stretch', config={'displayModeBar': False})
-            
-    with analysis_tabs[1]:
-        col_csa_radar, col_csa_bar = st.columns([1, 1])
-        with col_csa_radar:
-            st.markdown(f"### 🎯 CSA Domain Maturity")
-            # Filter out Unmapped for better visual
-            clean_domain_scores = {k: v for k, v in domain_scores.items() if k != 'Unmapped'}
-            if clean_domain_scores:
-                fig_csa_radar = charts.plot_radar_chart(list(clean_domain_scores.keys()), list(clean_domain_scores.values()))
-                st.plotly_chart(fig_csa_radar, width='stretch', config={'displayModeBar': False})
-            else:
-                st.info("No CSA domain data available for this snapshot.")
-                
-        with col_csa_bar:
-            st.markdown("### 📊 Solutions Specific Performance")
-            if clean_domain_scores:
-                fig_domain_bar = charts.plot_bar_chart(clean_domain_scores)
-                st.plotly_chart(fig_domain_bar, width='stretch', config={'displayModeBar': False})
-            else:
-                st.info("No Domain scores available.")
+            st.plotly_chart(fig_bench, use_container_width=True)
+
+    with persona_tabs[2]:
+        # --- SPECIALIST VIEW ---
+        st.markdown("### Deep-Dive Domain Performance")
+        for dm in v2_metrics:
+            expander_label = f"{dm.domain_name} | Score: {dm.score:.2f} | Gaps: {dm.critical_gaps}"
+            with st.expander(expander_label):
+                ui.render_maturity_badge(dm.maturity_level)
+                st.markdown("<br>", unsafe_allow_html=True)
+                for sub in dm.subcategory_metrics:
+                    col_s1, col_s2, col_s3 = st.columns([2, 1, 1])
+                    col_s1.write(f"**{sub.subcat_name}**")
+                    with col_s2:
+                        ui.render_criticality_badge(sub.criticality)
+                        st.progress(sub.score)
+                    col_s3.write(f"{sub.maturity_level}")
 
     # === ROW 3: RISK MATRIX ===
     st.subheader("🎯 Priority Risk Matrix")
@@ -1105,10 +1197,10 @@ elif page == "Executive Dashboard":
         with col_rep_btn:
             # Prepare Data
             metrics = {
-                'score': total_avg_score,
-                'maturity': maturity_level,
-                'gaps': critical_gaps,
-                'compliance': compliance_pct,
+                'score': overall['score'] * 5, # Scale to 0-5 for reporting consistency
+                'maturity': overall['maturity_level'],
+                'gaps': overall['critical_gaps'],
+                'compliance': overall['coverage'] * 100,
                 'savings': roi_results.get('estimated_savings', 0)
             }
             charts_dict = {
