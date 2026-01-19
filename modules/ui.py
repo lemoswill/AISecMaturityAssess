@@ -1,4 +1,5 @@
 import streamlit as st
+from typing import List
 
 
 def get_palo_alto_css():
