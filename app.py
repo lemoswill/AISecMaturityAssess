@@ -824,6 +824,19 @@ elif page == "Executive Dashboard":
         if not details_df.empty:
             # Reconstruct Category Scores
             category_scores = details_df.groupby('category')['score'].mean().to_dict()
+            
+            # --- Enrich Domain Information ---
+            # Create a lookup for ID -> Domain efficiently
+            id_to_domain = {}
+            for func, subcats in data.ASSESSMENT_DATA.items():
+                for subcat_key, content in subcats.items():
+                    controls = content.get('csa_controls', [])
+                    for c in controls:
+                        id_to_domain[c['id']] = c.get('domain', 'Unmapped')
+            
+            details_df['domain'] = details_df['question_id'].map(id_to_domain).fillna('Unmapped')
+            domain_scores = details_df.groupby('domain')['score'].mean().to_dict()
+            
             # Calculate Total Score
             sel_row = df[df['id'] == selected_id].iloc[0]
             
@@ -1009,17 +1022,40 @@ elif page == "Executive Dashboard":
         st.markdown(briefing_html, unsafe_allow_html=True)
             
     # === ROW 2: DETAILED ANALYSIS ===
-    col_radar, col_bench = st.columns([1, 1])
+    st.markdown("---")
+    analysis_tabs = st.tabs([f"🕸️ {i18n.t('tab_nist_profile')}", f"🛡️ {i18n.t('tab_solutions_profile')}"])
     
-    with col_radar:
-        st.markdown("### 🕸️ NIST AI RMF Profile")
-        fig_radar = charts.plot_radar_chart(list(category_scores.keys()), list(category_scores.values()))
-        st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
-        
-    with col_bench:
-        st.markdown("### 📊 Industry Benchmark")
-        fig_bench = charts.plot_benchmark_chart(category_scores)
-        st.plotly_chart(fig_bench, width='stretch', config={'displayModeBar': False})
+    with analysis_tabs[0]:
+        col_radar, col_bench = st.columns([1, 1])
+        with col_radar:
+            st.markdown(f"### 🕸️ {i18n.t('tab_nist_profile')}")
+            fig_radar = charts.plot_radar_chart(list(category_scores.keys()), list(category_scores.values()))
+            st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
+            
+        with col_bench:
+            st.markdown("### 📊 Industry Benchmark")
+            fig_bench = charts.plot_benchmark_chart(category_scores)
+            st.plotly_chart(fig_bench, width='stretch', config={'displayModeBar': False})
+            
+    with analysis_tabs[1]:
+        col_csa_radar, col_csa_bar = st.columns([1, 1])
+        with col_csa_radar:
+            st.markdown(f"### 🎯 CSA Domain Maturity")
+            # Filter out Unmapped for better visual
+            clean_domain_scores = {k: v for k, v in domain_scores.items() if k != 'Unmapped'}
+            if clean_domain_scores:
+                fig_csa_radar = charts.plot_radar_chart(list(clean_domain_scores.keys()), list(clean_domain_scores.values()))
+                st.plotly_chart(fig_csa_radar, width='stretch', config={'displayModeBar': False})
+            else:
+                st.info("No CSA domain data available for this snapshot.")
+                
+        with col_csa_bar:
+            st.markdown("### 📊 Solutions Specific Performance")
+            if clean_domain_scores:
+                fig_domain_bar = charts.plot_bar_chart(clean_domain_scores)
+                st.plotly_chart(fig_domain_bar, width='stretch', config={'displayModeBar': False})
+            else:
+                st.info("No Domain scores available.")
 
     # === ROW 3: RISK MATRIX ===
     st.subheader("🎯 Priority Risk Matrix")
