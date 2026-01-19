@@ -133,9 +133,9 @@ st.sidebar.markdown("""
             border-radius: 8px; 
             border-left: 4px solid #D97706;
             margin-bottom: 1.5rem;">
-    <p style="color: #92400E; font-size: 0.75rem; font-weight: 800; margin: 0 0 6px 0;">🧪 DEMO MODE</p>
+    <p style="color: #92400E; font-size: 0.75rem; font-weight: 800; margin: 0 0 6px 0;">🧪 DEMO MODE ACTIVE</p>
     <p style="color: #78350F; font-size: 0.8rem; margin: 0; line-height: 1.5; font-weight: 500;">
-        Data is <strong>not persisted</strong> between sessions.
+        Data is <strong>not persisted</strong> between sessions. In production, this would integrate with <strong>PostgreSQL/Cloud Storage</strong> and <strong>Enterprise SSO</strong>.
     </p>
 </div>
 """, unsafe_allow_html=True)
@@ -147,7 +147,7 @@ theme_choice = st.sidebar.radio(
     "Select Interface Style",
     ["Silicon Precision", "Palo Alto Enterprise"],
     index=0 if st.session_state['ui_style'] == "Silicon Precision" else 1,
-    help="Toggle between professional Glassmorphism and Palo Alto Enterprise design.",
+    help="Toggle between different enterprise design profiles. Palo Alto Enterprise offers a distinct high-contrast professional look.",
     label_visibility="collapsed"
 )
 
@@ -247,7 +247,7 @@ if page == "Evidence Locker":
                 for up_file in uploaded_files:
                     saved_path = evidence.save_uploaded_file(up_file, framework_tag=framework_tag)
                     if saved_path:
-                        success, _ = engine.ingest_file(up_file.name)
+                        success, _ = engine.ingest_file(up_file.name, framework_tag=framework_tag)
             st.success("Indexing Complete!")
             st.rerun()
             
@@ -375,6 +375,7 @@ if page == "Assessment":
         index=list(sub_tabs.keys()).index(st.session_state.get('assessment_tab_selection', 'Enterprise')),
         format_func=lambda x: sub_tabs[x],
         horizontal=True,
+        help="Switch between Organization-wide (Enterprise) and Project-specific security profiles.",
         key="assessment_tab_selector", # Unique key
         label_visibility="collapsed"
     )
@@ -796,7 +797,7 @@ elif page == "Executive Dashboard":
             
             with col_date:
                 st.write("") # Spacer
-                if st.button("✏️ Edit / Clone", help="Load this assessment to modify responses", use_container_width=True):
+                if st.button("📋 Clone as New Scenario", help="Load this snapshot to create a new version or modify responses", use_container_width=True):
                     # Set Scope (Legacy, mostly for sidebar info)
                     sc = sel_row.get('scope', 'org')
                     pt = sel_row.get('project_type', 'none')
@@ -1027,10 +1028,11 @@ elif page == "Executive Dashboard":
                 data=html_report,
                 file_name=f"executive_report_{meta['date']}.html",
                 mime="text/html",
-                help="Download a high-quality HTML report. Open it and use 'Print to PDF' for the final document."
+                help="Generates an enterprise-ready report including Maturity Gauge, Benchmarks, and NIST/CSA Mapping."
             )
+            st.markdown('<p style="color: #64748B; font-size: 0.8rem; margin-top: -10px;">Contains detailed control mapping to NIST AI RMF & CSA AICM</p>', unsafe_allow_html=True)
         with col_rep_info:
-             st.info("💡 **Pro Tip:** Open the downloaded HTML and use **Ctrl+P (Save as PDF)** for a vector-quality Board Report.")
+             st.info("💡 **Pro Tip:** For a vector-quality Board Report, open the downloaded file and use **Print to PDF**.")
 
     # === ROW 4: DETAILED AUDIT & COMPLIANCE LOG ===
     if 'details_df' in locals() and not details_df.empty:
