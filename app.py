@@ -695,10 +695,10 @@ elif page == "Executive Dashboard":
             with col_date:
                 st.write("") # Spacer
                 if st.button("✏️ Edit / Clone", help="Load this assessment to modify responses", use_container_width=True):
-                    # Load Data
-                    st.session_state['project_name_input'] = f"Copy of {sel_row['project_name']}"
+                    # Load Data - Fix Key Mismatch
+                    st.session_state[f"proj_name_{sc}_{pt}"] = f"Copy of {sel_row['project_name']}"
                     
-                    # Set Scope
+                    # Set Scope (Legacy, mostly for sidebar info)
                     sc = sel_row.get('scope', 'org')
                     pt = sel_row.get('project_type', 'none')
                     
@@ -729,9 +729,8 @@ elif page == "Executive Dashboard":
                              # For MVP, restoring Scores is the critical part.
                     
                     st.session_state['responses'] = new_responses
-                    st.toast("Assessment Loaded! Redirecting...")
-                    st.session_state['responses'] = new_responses
-                    st.toast("Assessment Loaded! Redirecting...")
+                    target_tab = "Enterprise" if sc.lower() == 'org' else f"Solutions {pt.title()}"
+                    st.toast(f"Assessment Loaded! Please check the '{target_tab}' tab.")
                     # Safe Navigation Switch
                     st.session_state['nav_override'] = "Assessment"
                     st.rerun()
