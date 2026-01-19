@@ -519,7 +519,22 @@ def display_header(title, subtitle=""):
     """, unsafe_allow_html=True)
 
 def render_control_input(control, unique_key, ai_feedback=None):
-    """Render a single CSA control input with Silicon Precision Glassmorphism."""
+    """Render a single CSA control input with Silicon Precision Glassmorphism and State Persistence."""
+    
+    # --- Recovery Logic ---
+    # If the widget key is missing from session_state (e.g. after a tab switch),
+    # we recover its state from the persistent 'responses' dictionary.
+    if unique_key not in st.session_state:
+        saved_val = st.session_state.get('responses', {}).get(unique_key)
+        if saved_val is not None:
+            # Map index to string label for the select_slider
+            options = ["Not Implemented (0)", "Initial (1)", "Defined (2)", "Managed (3)", "Measured (4)", "Optimized (5)"]
+            try:
+                # Ensure we store the label to match widget expectations
+                st.session_state[unique_key] = options[int(saved_val)]
+            except:
+                pass
+
     current_val = st.session_state.get(unique_key, 0)
     
     # Standardize current_val to index (0-5)
