@@ -1004,13 +1004,12 @@ elif page == "Executive Dashboard":
         st.plotly_chart(fig_gauge, width='stretch', config={'displayModeBar': False})
         
     with col_strategy:
-        st.markdown(f"""
+        briefing_html = f"""
             <div class="glass-card" style="margin-top: 2rem; padding: 1.5rem; border-left: 6px solid #1E293B !important;">
                 <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: #0F172A; display: flex; align-items: center; gap: 8px;">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
                     {i18n.t("briefing_title")}
                 </h3>
-                
                 <div style="background: #F8FAFC; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
                     <p style="color: #64748B; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_posture")}</p>
                     <div style="display: flex; justify-content: space-between; align-items: baseline;">
@@ -1018,22 +1017,20 @@ elif page == "Executive Dashboard":
                         <span style="font-size: 0.75rem; color: #64748B;">{i18n.t("target_label")}: 4.5</span>
                     </div>
                 </div>
-
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
                     <div style="background: #F0FDF4; padding: 12px; border-radius: 8px; border: 1px solid #DCFCE7;">
                         <p style="color: #166534; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_strength")}</p>
                         <p style="font-size: 0.85rem; font-weight: 700; color: #064E3B; margin: 0;">{strongest_func}</p>
                         <span style="font-size: 0.7rem; color: #15803D;">{i18n.t("leading_pillar")} {strength_val:.1f}</span>
                     </div>
-                    
                     <div style="background: #FFFBEB; padding: 12px; border-radius: 8px; border: 1px solid #FEF3C7;">
                         <p style="color: #92400E; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_quick_win")}</p>
                         <p style="font-size: 0.85rem; font-weight: 700; color: #78350F; margin: 0;">{quick_win}</p>
                         <span style="font-size: 0.7rem; color: #D97706;">{i18n.t("fastest_path")} {weakest_func}</span>
                     </div>
                 </div>
-            </div>
-        """, unsafe_allow_html=True)
+            </div>"""
+        st.markdown(briefing_html, unsafe_allow_html=True)
             
     # === ROW 2: DETAILED ANALYSIS ===
     col_radar, col_bench = st.columns([1, 1])
