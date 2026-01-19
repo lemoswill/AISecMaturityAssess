@@ -323,6 +323,31 @@ if page == "Assessment":
             <span style="font-size: 0.75rem; color: #0369A1;">Snapshot: {datetime.date.today().strftime("%Y-%m-%d")}</span>
         </div>
     """, unsafe_allow_html=True)
+
+    # Subtle "Cloning Mode" / "Scenario Composer" Banner
+    if st.session_state.get('cloning_from'):
+        st.markdown(f"""
+            <div style="background: rgba(79, 70, 229, 0.05); 
+                        border: 1px dashed #4F46E5; 
+                        padding: 12px 20px; 
+                        border-radius: 10px; 
+                        margin: 1.5rem 0; 
+                        display: flex; 
+                        align-items: center; 
+                        gap: 12px;">
+                <div style="background: #4F46E5; color: white; padding: 4px 8px; border-radius: 4px; font-size: 0.65rem; font-weight: 800; text-transform: uppercase;">Draft Mode</div>
+                <div style="color: #4338CA; font-size: 0.9rem; font-weight: 500; flex: 1;">
+                    You are drafting a <strong>new scenario</strong> based on historical data from <strong>{st.session_state['cloning_from']}</strong>. 
+                    <span style="color: #6366F1; font-size: 0.8rem; display: block; margin-top: 2px;">Changes will be saved as a fresh snapshot.</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        if st.button("✖️ Cancel Draft & Clear Data", key="cancel_cloning", help="Exit cloning mode and clear loaded responses"):
+            del st.session_state['cloning_from']
+            if 'responses' in st.session_state: st.session_state['responses'] = {}
+            # Also clear individual keys if needed, but 'responses' is the main one.
+            # Actually, the widgets use unique_id keys. It's safer to just rerun and hope they clear if not in state.
+            st.rerun()
     
     ui.display_header("AI Security Maturity Assessment", "NIST AI RMF mapped to CSA AICM Controls")
     
@@ -578,8 +603,12 @@ if page == "Assessment":
                 if avg_score > 4.5: level = "Optimized"
                 
                 storage.save_assessment(project_name, final_responses, avg_score, level, scope=scope_key, project_type=type_key)
+                if 'cloning_from' in st.session_state:
+                    del st.session_state['cloning_from']
                 
-                import io
+                st.success("✅ Assessment Saved Successfully!")
+                st.rerun()
+                
                 csv_buffer = io.StringIO()
                 pd.DataFrame(final_responses).to_csv(csv_buffer, index=False)
                 
@@ -798,6 +827,7 @@ elif page == "Executive Dashboard":
             with col_date:
                 st.write("") # Spacer
                 if st.button("📋 Clone as New Scenario", help="Load this snapshot to create a new version or modify responses", use_container_width=True):
+                    st.session_state['cloning_from'] = sel_row['project_name']
                     # Set Scope (Legacy, mostly for sidebar info)
                     sc = sel_row.get('scope', 'org')
                     pt = sel_row.get('project_type', 'none')
