@@ -497,13 +497,13 @@ if page == "Assessment":
                 provider_keys = st.session_state.get('provider_keys', {})
                 active_key = provider_keys.get(current_provider, st.session_state.get('api_key') if current_provider == 'OpenAI' else None)
                 
-                if active_key:
-                    if st.button(f"🚀 Analyze {selected_domain}", key=f"btn_analyze_{scope_key}_{type_key}", type="primary", width='stretch'):
+                if st.button(f"🚀 Analyze {selected_domain}", key=f"btn_analyze_{scope_key}_{type_key}", type="primary", width='stretch'):
+                    if active_key:
                         st.session_state['trigger_bulk_assess'] = selected_domain
                         st.session_state['active_tab_context'] = (scope_key, type_key) # Track where we came from
                         st.rerun()
-                else:
-                    st.button("🔑 Key Required", key=f"btn_lock_{scope_key}_{type_key}", type="secondary", width='stretch', disabled=True)
+                    else:
+                        st.error(i18n.t("key_required_error"))
         
         st.markdown("---")
     
@@ -758,13 +758,9 @@ if page == "Assessment":
                             provider_keys = st.session_state.get('provider_keys', {})
                             active_key = provider_keys.get(current_provider, st.session_state.get('api_key') if current_provider == 'OpenAI' else None)
                             
-                            if active_key:
-                                col_btn, col_empty = st.columns([1, 4])
-                                if col_btn.button("✨ Auto-Assess", key=f"btn_{unique_id}_{scope_key}_{type_key}", help=f"Analyze with {current_provider}"):
-                                    # Logic...
-                                    # Since this is replicated, we should assume the helper logic works the same
-                                    # But we need access to engine etc.
-                                    # For brevity in this chunk, I'll rely on the existing Session State.
+                            col_btn, col_empty = st.columns([1, 4])
+                            if col_btn.button("✨ Auto-Assess", key=f"btn_{unique_id}_{scope_key}_{type_key}", help=f"Analyze with {current_provider}"):
+                                if active_key:
                                     with st.spinner(f"Analyzing..."):
                                         engine = ai_engine.get_engine()
                                         active_model = st.session_state.get('provider_models', {}).get(current_provider)
@@ -775,6 +771,8 @@ if page == "Assessment":
                                             options = ["Not Implemented (0)", "Initial (1)", "Defined (2)", "Managed (3)", "Measured (4)", "Optimized (5)"]
                                             st.session_state[unique_id] = options[max(0, min(5, res['score']))]
                                         st.rerun()
+                                else:
+                                    st.error(i18n.t("key_required_error"))
 
                             # Render Control
                             ai_data = st.session_state['ai_results'].get(unique_id)
