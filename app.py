@@ -204,6 +204,17 @@ if page == "Evidence Locker":
             new_key = st.text_input(f"{provider_clean} API Key", value=current_key, type="password")
             st.session_state['provider_keys'][provider_clean] = new_key
             st.session_state['api_key'] = new_key
+            
+            # Test Connection Button
+            if st.button("🔌 Test Connection", use_container_width=True):
+                with st.spinner("Validating..."):
+                    engine = ai_engine.get_engine()
+                    success, msg = engine.validate_api_key(new_key, provider_clean, st.session_state['provider_models'].get(provider_clean))
+                    if success:
+                        st.success("✅ Key Validated")
+                    else:
+                        st.error(f"❌ {msg}")
+                        
         with col2:
             default_model = "gpt-3.5-turbo" if provider_clean == "OpenAI" else "gemini-pro" if provider_clean == "Gemini" else "sonar"
             new_model = st.text_input("Model Name", value=current_model if current_model else default_model)
@@ -223,14 +234,18 @@ if page == "Evidence Locker":
         <p style="color: #64748B; font-size: 0.9rem; margin-bottom: 1.5rem;">Supply security policies, architecture reviews, or audit logs to fuel the AI analysis.</p>
     """, unsafe_allow_html=True)
     
-    uploaded_files = st.file_uploader("Drop PDF/Text files here", type=['pdf', 'txt', 'md'], accept_multiple_files=True, label_visibility="collapsed")
-    
+    col_up, col_tag = st.columns([3, 1])
+    with col_up:
+        uploaded_files = st.file_uploader("Drop PDF/Text files here", type=['pdf', 'txt', 'md'], accept_multiple_files=True, label_visibility="collapsed")
+    with col_tag:
+        framework_tag = st.selectbox("Assign Framework", ["NIST AI RMF", "CSA AICM", "ISO 42001", "Internal Policy"], index=0)
+        
     if uploaded_files:
         if st.button(f"⚡ Index {len(uploaded_files)} Resources", type="primary"):
             with st.spinner("Processing Intelligence..."):
                 engine = ai_engine.get_engine()
                 for up_file in uploaded_files:
-                    saved_path = evidence.save_uploaded_file(up_file)
+                    saved_path = evidence.save_uploaded_file(up_file, framework_tag=framework_tag)
                     if saved_path:
                         success, _ = engine.ingest_file(up_file.name)
             st.success("Indexing Complete!")
@@ -240,17 +255,48 @@ if page == "Evidence Locker":
     st.divider()
     
     # 3. View Index
-    st.markdown("### 📚 Intelligence Assets")
+    st.markdown("### 📚 Intelligence Assets (Knowledge Base)")
+    st.markdown('<p style="color: #64748B; font-size: 0.85rem; margin-top: -10px; margin-bottom: 20px;">Documents indexed for AI Auto-Assessment logic.</p>', unsafe_allow_html=True)
+    
     files = evidence.list_evidence_files()
     if files:
-        for f in files:
+        # Filter out .json metadata files for the list
+        asset_files = [f for f in files if not f.endswith('.json')]
+        
+        if asset_files:
+            # Build Metadata Table
+            metadata_list = []
+            for f in asset_files:
+                meta = evidence.get_metadata(f)
+                metadata_list.append({
+                    "Document Name": f,
+                    "Type": meta.get('type', 'N/A'),
+                    "Framework": meta.get('framework', 'NIST'),
+                    "Upload Date": meta.get('upload_date', 'N/A'),
+                    "Uploaded By": meta.get('uploaded_by', 'System')
+                })
+            
+            st.dataframe(pd.DataFrame(metadata_list), use_container_width=True, hide_index=True)
+        else:
+            st.info("Knowledge base is empty.")
+        
+        st.markdown("<br>", unsafe_allow_html=True)
+        
+        # 4. Document Repository (Audit Trail)
+        st.markdown("### 📜 Document Repository (Audit Trail)")
+        st.markdown('<p style="color: #64748B; font-size: 0.85rem; margin-top: -10px; margin-bottom: 20px;">Regulatory record of all materials provided for this assessment.</p>', unsafe_allow_html=True)
+        
+        for f in asset_files:
             st.markdown(f"""
-                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; align-items: center; gap: 10px;">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
-                    <span style="color: #334155; font-size: 0.9rem; font-weight: 500;">{f}</span>
+                <div style="background: #F8FAFC; border: 1px solid #E2E8F0; padding: 10px 15px; border-radius: 10px; margin-bottom: 8px; display: flex; align-items: center; justify-content: space-between;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#64748B" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6M16 13H8M16 17H8M10 9H8"/></svg>
+                        <span style="color: #334155; font-size: 0.9rem; font-weight: 500;">{f}</span>
+                    </div>
+                    <span style="background: #E0F2FE; color: #0369A1; font-size: 0.7rem; padding: 2px 8px; border-radius: 4px; font-weight: 600;">VERIFIED</span>
                 </div>
             """, unsafe_allow_html=True)
-        
+            
         if st.button("🗑️ Wipe Knowledge Base", type="secondary"):
              engine = ai_engine.get_engine()
              if engine.reset_db():
