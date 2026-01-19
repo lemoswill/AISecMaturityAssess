@@ -813,4 +813,3 @@ elif page == "Evidence Locker":
                     evidence.delete_evidence_file(f)
                     st.success(f"Deleted {f}")
                     st.rerun()
-```
