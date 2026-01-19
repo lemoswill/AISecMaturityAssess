@@ -94,13 +94,12 @@ if 'navigate_to' in st.session_state:
     del st.session_state['navigate_to']
 else:
     # Custom styled radio buttons
-    page = st.sidebar.radio(
-        "nav_label",
-        ["Assessment", "History & Dashboard", "Evidence Locker"],
-        label_visibility="collapsed"
-    )
-
-st.sidebar.markdown("---")
+    with st.sidebar:
+        st.markdown("### NAVIGATION")
+        page = st.radio("Go to", ["Executive Dashboard", "Assessment", "Evidence Locker"], label_visibility="collapsed")
+        
+        st.divider()
+        st.markdown("---")
 
 # Architecture Info Card
 st.sidebar.markdown(f"""
@@ -614,7 +613,7 @@ if page == "Assessment":
                             
                             if active_key:
                                 col_btn, col_empty = st.columns([1, 4])
-                                if col_btn.button("✨ Auto-Assess", key=f"btn_{unique_id}_{scope_key}_{type_key}", help=f"Analyze with {current_provider}"):
+                                if col_btn.button("✨ Auto-Assess", key=f"btn_{unique_id}_{scope_key}_{type_type}", help=f"Analyze with {current_provider}"):
                                     # Logic...
                                     # Since this is replicated, we should assume the helper logic works the same
                                     # But we need access to engine etc.
@@ -654,70 +653,164 @@ if page == "Assessment":
         render_assessment_view("project", "saas", "Solutions SaaS")
 
 
-elif page == "History & Dashboard":
-    ui.display_header("Assessment Dashboard", "Historical analysis and visualizations")
+elif page == "Executive Dashboard":
+    ui.display_header("Executive Security Dashboard", "Real-Time Governance & Maturity Analysis")
     
     df = storage.load_history()
     
-    if df.empty:
-        st.info("No assessments found.")
-    else:
-        # Selection Logic
-        assessment_options = {}
-        for index, row in df.iterrows():
-            scope_label = row.get('scope', 'Org').upper() if row.get('scope') else 'ORG'
-            ptype_label = f"({row.get('project_type')})" if row.get('project_type') and row.get('project_type') != 'none' else ""
-            label = f"{row['project_name']} [{scope_label}{ptype_label}] ({row['timestamp']})"
-            assessment_options[label] = row['id']
-        selected_option = st.selectbox("Select Assessment to View:", list(assessment_options.keys()))
-        selected_id = assessment_options[selected_option]
+    # Check if we have history, otherwise use Demo Data / Current Session
+    # For MVP, let's allow "Current Session" visualization if no history
+    has_history = not df.empty
+    
+    if has_history:
+        # Selection Logic (Existing)
+        col_sel, col_date = st.columns([3, 1])
+        with col_sel:
+            assessment_options = {}
+            for index, row in df.iterrows():
+                scope_label = row.get('scope', 'Org').upper() if row.get('scope') else 'ORG'
+                ptype_label = f"({row.get('project_type')})" if row.get('project_type') and row.get('project_type') != 'none' else ""
+                label = f"{row['project_name']} [{scope_label}{ptype_label}] ({row['timestamp']})"
+                assessment_options[label] = row['id']
+            selected_option = st.selectbox("Select Assessment Snapshot:", list(assessment_options.keys()))
+            selected_id = assessment_options[selected_option]
         
-        # Get details
+        # Get data
         details_df = storage.get_assessment_details(selected_id)
-        
         if not details_df.empty:
-            # Reconstruct Scores
-            # Group by 'category' (NIST Function) and take average of 'score'
-            # Note: This is an approximation. Ideally we'd replicate the exact Rollup logic (Avg of Subcats),
-            # but since we stored 'category' as the Function name, Avg(Controls) is a close proxy for Avg(Function) if subcats are balanced.
-            # To be precise, we should have stored Subcat info more explicitly.
-            # For now, Avg(Controls per Function) is acceptable for the View.
-            
+            # Reconstruct Category Scores
             category_scores = details_df.groupby('category')['score'].mean().to_dict()
-            
-            # Overview Metrics (Glass Cards)
+            # Calculate Total Score
             sel_row = df[df['id'] == selected_id].iloc[0]
+            total_avg_score = sel_row['total_score']
+            maturity_level = sel_row['maturity_level']
+            # Mock Gaps count (Controls < 3)
+            critical_gaps = details_df[details_df['score'] < 3].shape[0]
+            compliance_pct = (details_df[details_df['score'] >= 3].shape[0] / details_df.shape[0]) * 100 if details_df.shape[0] > 0 else 0
             
+    else:
+        # DEMO / EMPTY STATE
+        st.info("ℹ️ No historical snapshots found. Showing **Live Demo Simulation** of Executive View.")
+        # Synthetic Data
+        total_avg_score = 3.4
+        maturity_level = "Managed"
+        category_scores = {'GOVERN': 3.8, 'MAP': 3.2, 'MEASURE': 2.9, 'MANAGE': 3.5}
+        critical_gaps = 12
+        compliance_pct = 68
+        
+    # === ROW 1: HEADLINE METRICS ===
+    # Gauge + 3 KPI Cards
+    col_gauge, col_kpi = st.columns([1.5, 2.5])
+    
+    with col_gauge:
+        st.markdown('<div class="glass-card" style="height: 100%; display: flex; align-items: center; justify-content: center;">', unsafe_allow_html=True)
+        charts.plot_gauge_chart(total_avg_score)
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    with col_kpi:
+        # 3 KPI Cards Layout
+        kpi_col1, kpi_col2, kpi_col3 = st.columns(3)
+        
+        with kpi_col1:
             st.markdown(f"""
-                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 2rem;">
-                    <div class="glass-card" style="margin-bottom: 0;">
-                        <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0;">Project Name</p>
-                        <h2 style="color: #0F172A; margin: 0; font-size: 1.5rem;">{sel_row['project_name']}</h2>
-                    </div>
-                    <div class="glass-card" style="margin-bottom: 0; border-left: 5px solid #2563EB !important;">
-                        <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0;">Total Maturity</p>
-                        <h2 style="color: #2563EB; margin: 0; font-size: 1.5rem;">{sel_row['total_score']:.2f} <span style="font-size: 0.9rem; color: #94A3B8;">/ 5.0</span></h2>
-                    </div>
-                    <div class="glass-card" style="margin-bottom: 0; border-left: 5px solid #10B981 !important;">
-                        <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; margin: 0 0 10px 0;">Maturity Level</p>
-                        <h2 style="color: #10B981; margin: 0; font-size: 1.5rem;">{sel_row['maturity_level']}</h2>
-                    </div>
+                <div class="glass-card" style="text-align: center; border-top: 4px solid #10B981 !important;">
+                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Maturity Level</p>
+                    <h2 style="color: #10B981; font-size: 1.8rem; margin: 10px 0;">{maturity_level}</h2>
+                    <p style="color: #64748B; font-size: 0.8rem;">Current Status</p>
                 </div>
             """, unsafe_allow_html=True)
             
-            # Charts
-            col_chart1, col_chart2 = st.columns([1, 1])
+        with kpi_col2:
+             st.markdown(f"""
+                <div class="glass-card" style="text-align: center; border-top: 4px solid #EF4444 !important;">
+                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Critical Gaps</p>
+                    <h2 style="color: #EF4444; font-size: 1.8rem; margin: 10px 0;">{critical_gaps}</h2>
+                    <p style="color: #64748B; font-size: 0.8rem;">To Remediate</p>
+                </div>
+            """, unsafe_allow_html=True)
             
-            with col_chart1:
-                st.subheader("Maturity Profile (NIST AI RMF)")
-                # Ensure all categories are present even if 0
-                final_cat_scores = []
-                final_cat_names = list(data.NIST_FUNCTIONS.keys())
-                for cat in final_cat_names:
-                    final_cat_scores.append(category_scores.get(cat, 0))
-                    
-                charts.plot_radar_chart(final_cat_names, final_cat_scores)
-                
-            with col_chart2:
-                st.subheader("Detailed Breakdown")
-                st.dataframe(details_df[['category', 'question_id', 'score']].style.background_gradient(cmap='Blues'), use_container_width=True)
+        with kpi_col3:
+             st.markdown(f"""
+                <div class="glass-card" style="text-align: center; border-top: 4px solid #3B82F6 !important;">
+                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Compliance</p>
+                    <h2 style="color: #3B82F6; font-size: 1.8rem; margin: 10px 0;">{compliance_pct:.0f}%</h2>
+                    <p style="color: #64748B; font-size: 0.8rem;">NIST Aligned</p>
+                </div>
+            """, unsafe_allow_html=True)
+            
+    # === ROW 2: DETAILED ANALYSIS ===
+    col_radar, col_bench = st.columns([1, 1])
+    
+    with col_radar:
+        st.subheader("🛡️ NIST AI RMF Profile")
+        final_cat_names = list(category_scores.keys())
+        final_cat_scores = list(category_scores.values())
+        charts.plot_radar_chart(final_cat_names, final_cat_scores)
+        
+    with col_bench:
+        st.subheader("📊 Industry Benchmark")
+        # Reuse available scores
+        charts.plot_benchmark_chart(category_scores)
+
+    # === ROW 3: STRATEGIC ROADMAP (Simple Table for MVP) ===
+    st.subheader("🚀 Recommended Actions (Strategic Roadmap)")
+    st.markdown("""
+    <div class="glass-card">
+        <table style="width:100%; border-collapse: collapse;">
+            <tr style="border-bottom: 2px solid #E2E8F0;">
+                <th style="text-align: left; padding: 12px; color: #475569;">Priority</th>
+                <th style="text-align: left; padding: 12px; color: #475569;">Action Item</th>
+                <th style="text-align: left; padding: 12px; color: #475569;">Impact</th>
+                <th style="text-align: left; padding: 12px; color: #475569;">Est. Effort</th>
+            </tr>
+            <tr style="border-bottom: 1px solid #F1F5F9;">
+                <td style="padding: 12px;"><span style="background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">High</span></td>
+                <td style="padding: 12px; color: #1E293B; font-weight: 500;">Implement Model Inventory Tracking (MAP 1.1)</td>
+                <td style="padding: 12px; color: #334155;">Critical Risk Reduction</td>
+                <td style="padding: 12px; color: #334155;">2 Weeks</td>
+            </tr>
+            <tr style="border-bottom: 1px solid #F1F5F9;">
+                <td style="padding: 12px;"><span style="background: #FEE2E2; color: #991B1B; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">High</span></td>
+                <td style="padding: 12px; color: #1E293B; font-weight: 500;">Define AI Acceptable Use Policy (GOVERN 2.3)</td>
+                <td style="padding: 12px; color: #334155;">Governance Baseline</td>
+                <td style="padding: 12px; color: #334155;">1 Week</td>
+            </tr>
+            <tr>
+                <td style="padding: 12px;"><span style="background: #FEF3C7; color: #92400E; padding: 4px 8px; border-radius: 4px; font-size: 0.8rem; font-weight: 600;">Medium</span></td>
+                <td style="padding: 12px; color: #1E293B; font-weight: 500;">Automate Drift Detection (MEASURE 2.1)</td>
+                <td style="padding: 12px; color: #334155;">Operational Stability</td>
+                <td style="padding: 12px; color: #334155;">1 Month</td>
+            </tr>
+        </table>
+    </div>
+    """, unsafe_allow_html=True)
+
+elif page == "Evidence Locker":
+    ui.display_header("Evidence Locker", "Manage your uploaded documents")
+    
+    # File uploader
+    uploaded_files = st.file_uploader("Upload evidence documents (PDF, DOCX, TXT)", type=["pdf", "docx", "txt"], accept_multiple_files=True)
+    
+    if uploaded_files:
+        for uploaded_file in uploaded_files:
+            # Save the file
+            file_path = evidence.save_evidence_file(uploaded_file)
+            st.success(f"Uploaded: {uploaded_file.name}")
+    
+    st.markdown("---")
+    st.subheader("Current Evidence Files")
+    
+    files = evidence.list_evidence_files()
+    if not files:
+        st.info("No evidence files uploaded yet.")
+    else:
+        for f in files:
+            col1, col2 = st.columns([3, 1])
+            with col1:
+                st.markdown(f"📄 {f}")
+            with col2:
+                if st.button("Delete", key=f"delete_{f}"):
+                    evidence.delete_evidence_file(f)
+                    st.success(f"Deleted {f}")
+                    st.rerun()
+```
