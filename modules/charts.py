@@ -166,7 +166,7 @@ def plot_benchmark_chart(your_scores, industry_scores=None):
     fig.update_layout(
         barmode='group',
         title=dict(
-            text="Your Score vs Industry Average (Cloud Providers)",
+            text="Your Score vs Industry Average",
             font=dict(size=14, color="#1E293B", weight="bold"),
             x=0.5,
             xanchor="center"
