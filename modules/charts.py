@@ -43,7 +43,7 @@ def plot_radar_chart(categories, scores):
         height=450
     )
     
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    return fig
 
 def plot_bar_chart(data_dict):
     """
@@ -87,7 +87,7 @@ def plot_bar_chart(data_dict):
         font=dict(family='Plus Jakarta Sans')
     )
     
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    return fig
 
 def plot_gauge_chart(score, max_score=5.0):
     """
@@ -129,7 +129,7 @@ def plot_gauge_chart(score, max_score=5.0):
         height=300
     )
     
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    return fig
 
 def plot_benchmark_chart(your_scores, industry_scores=None):
     """
@@ -188,4 +188,4 @@ def plot_benchmark_chart(your_scores, industry_scores=None):
         height=350
     )
     
-    st.plotly_chart(fig, use_container_width=True, config={'displayModeBar': False})
+    return fig
