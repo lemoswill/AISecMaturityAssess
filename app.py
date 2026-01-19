@@ -262,6 +262,22 @@ if page == "Evidence Locker":
         st.info("No documents indexed yet.")
 
 if page == "Assessment":
+    # Global Context Banner (for screenshots/presentations)
+    project_ctx = st.session_state.get('project_name', 'Demo Project')
+    st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%); 
+                    border-left: 4px solid #0EA5E9; 
+                    padding: 8px 16px; 
+                    margin-bottom: 12px; 
+                    border-radius: 6px; 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center;">
+            <span style="font-size: 0.85rem; color: #0C4A6E; font-weight: 600;">📋 {project_ctx} | Framework: NIST AI RMF + CSA AICM</span>
+            <span style="font-size: 0.75rem; color: #0369A1;">Snapshot: {datetime.date.today().strftime("%Y-%m-%d")}</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
     ui.display_header("AI Security Maturity Assessment", "NIST AI RMF mapped to CSA AICM Controls")
     
     # --- Scope Tabs ---
@@ -601,20 +617,27 @@ if page == "Assessment":
                     if not visible_controls: continue
                     has_visible_controls = True
                     
-                    # Subcat Header
+                    # Subcat Header - Calculate progress
                     current_subcat_total = 0
+                    responded_count = 0
                     for c in visible_controls:
                         unique_id = f"score_{scope_key}_{type_key}_{subcat_key}_{c['id']}"
                         val = st.session_state.get(unique_id, 0)
                         score = 0
-                        if isinstance(val, int): score = val
+                        if isinstance(val, int): 
+                            score = val
+                            if val > 0: responded_count += 1
                         elif isinstance(val, str):
-                            try: score = int(val.split('(')[-1].strip(')'))
+                            try: 
+                                score = int(val.split('(')[-1].strip(')'))
+                                if score > 0: responded_count += 1
                             except: pass
                         current_subcat_total += score
                     subcat_avg = current_subcat_total / len(visible_controls) if visible_controls else 0
+                    total_controls_in_subcat = len(visible_controls)
                     
-                    with st.expander(f"{subcat_key}"):
+                    # Enhanced expander header with progress
+                    with st.expander(f"{subcat_key} – {responded_count} of {total_controls_in_subcat} responded"):
                         st.markdown(f"""
                             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px; background: #F8FAFC; padding: 10px 15px; border-radius: 8px; border: 1px solid #E2E8F0;">
                                 <span style="color: #64748B; font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Subcategory Maturity</span>
@@ -677,6 +700,22 @@ if page == "Assessment":
 
 
 elif page == "Executive Dashboard":
+    # Global Context Banner (for screenshots/presentations)  
+    project_ctx = st.session_state.get('project_name', 'Organization')
+    st.markdown(f"""
+        <div style="background: linear-gradient(135deg, #F0F9FF 0%, #E0F2FE 100%); 
+                    border-left: 4px solid #0EA5E9; 
+                    padding: 8px 16px; 
+                    margin-bottom: 12px; 
+                    border-radius: 6px; 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center;">
+            <span style="font-size: 0.85rem; color: #0C4A6E; font-weight: 600;">📊 {project_ctx} Executive View | Framework: NIST AI RMF + CSA AICM</span>
+            <span style="font-size: 0.75rem; color: #0369A1;">Report Date: {datetime.date.today().strftime("%Y-%m-%d")}</span>
+        </div>
+    """, unsafe_allow_html=True)
+    
     ui.display_header("Executive Security Dashboard", "Real-Time Governance & Maturity Analysis")
     
     # Auto-generated Executive Summary (placeholder, will be populated after metrics calculation)
