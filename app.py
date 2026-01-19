@@ -1113,7 +1113,7 @@ elif page == "Executive Dashboard":
             st.info(f"**Insights:** {overall['total_questions']} controls evaluated. {overall['critical_gaps']} critical gaps identified.")
             
             # ROI Summary
-            roi_results = roi.calculate_ai_security_roi(overall['score'])
+            roi_results = roi.calculate_roi(overall['score'] * 5)
             st.success(f"Est. Annual Savings: ${roi_results.get('estimated_savings', 0):,.0f}")
 
     with persona_tabs[1]:
