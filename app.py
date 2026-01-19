@@ -6,7 +6,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import streamlit as st
 import pandas as pd
-from modules import data, storage, ui, charts, evidence, ai_engine
+from modules import ui, storage, data, evidence, ai_engine, mappings
 
 # --- Configuration ---
 st.set_page_config(
@@ -787,17 +787,30 @@ elif page == "Executive Dashboard":
     </div>
     """, unsafe_allow_html=True)
 
-    # === ROW 4: DETAILED AUDIT LOG ===
+    # === ROW 4: DETAILED AUDIT & COMPLIANCE LOG ===
     if 'details_df' in locals() and not details_df.empty:
         st.markdown("---")
-        with st.expander("🔍 View Detailed Assessment Log & Responses", expanded=False):
+        with st.expander("🔍 View Detailed Assessment & Compliance Matrix", expanded=False):
             st.info(f"Showing detailed records for: **{selected_option if 'selected_option' in locals() else 'Detailed View'}**")
             
             # Prepare DataFrame for Display
             display_df = details_df.copy()
             
+            # --- COMPLIANCE MAPPING ---
+            # 1. Get NIST Subcategory (e.g. GOVERN 1.1)
+            display_df['nist_subcat'] = display_df['question_id'].apply(mappings.get_subcat_from_id)
+            
+            # 2. Get Framework Mappings
+            def get_map(subcat, framework):
+                m = mappings.get_compliance_mapping(subcat)
+                return m.get(framework, '-')
+                
+            display_df['NIST GenAI (600-1)'] = display_df['nist_subcat'].apply(lambda x: get_map(x, 'nist_600_1'))
+            display_df['ISO 27001'] = display_df['nist_subcat'].apply(lambda x: get_map(x, 'iso_27001'))
+            display_df['EU AI Act'] = display_df['nist_subcat'].apply(lambda x: get_map(x, 'eu_ai_act'))
+            
             # Safely filter columns
-            cols_to_show = ['category', 'question_id', 'score', 'notes']
+            cols_to_show = ['category', 'question_id', 'score', 'notes', 'NIST GenAI (600-1)', 'ISO 27001', 'EU AI Act']
             available_cols = [c for c in cols_to_show if c in display_df.columns]
             display_df = display_df[available_cols]
             
@@ -824,16 +837,18 @@ elif page == "Executive Dashboard":
                         help="Score 0 to 5",
                         format="%d ⭐"
                     ),
-                    "Response/Details": st.column_config.TextColumn("Explanation", width="large")
+                    "Response/Details": st.column_config.TextColumn("Explanation", width="medium"),
+                    "NIST GenAI (600-1)": st.column_config.TextColumn("NIST 600-1 (GenAI)", width="medium"),
+                    "ISO 27001": st.column_config.TextColumn("ISO 27001 Mapping", width="small")
                 }
             )
             
             # Export Button
             csv = display_df.to_csv(index=False).encode('utf-8')
             st.download_button(
-                label="📥 Download Detailed CSV",
+                label="📥 Download Compliance CSV",
                 data=csv,
-                file_name=f"assessment_details_{selected_id if 'selected_id' in locals() else 'snapshot'}.csv",
+                file_name=f"compliance_matrix_{selected_id if 'selected_id' in locals() else 'snapshot'}.csv",
                 mime="text/csv",
             )
 
