@@ -521,14 +521,19 @@ def display_header(title, subtitle=""):
 def render_control_input(control, unique_key, ai_feedback=None):
     """Render a single CSA control input with Silicon Precision Glassmorphism."""
     current_val = st.session_state.get(unique_key, 0)
-    is_active = (isinstance(current_val, int) and current_val > 0)
     
-    # Try to parse if it's a string from legacy dropdowns
-    if not is_active and isinstance(current_val, str) and "(" in current_val:
+    # Standardize current_val to index (0-5)
+    current_idx = 0
+    if isinstance(current_val, str) and "(" in current_val:
         try:
-            val_num = int(current_val.split('(')[-1].strip(')'))
-            if val_num > 0: is_active = True
-        except: pass
+            current_idx = int(current_val.split('(')[-1].strip(')'))
+        except:
+            pass
+    elif isinstance(current_val, (int, float)):
+        current_idx = int(current_val)
+    
+    current_idx = max(0, min(5, current_idx))
+    is_active = (current_idx > 0)
 
     with st.container():
         # Glass Card Wrapper
@@ -583,7 +588,6 @@ def render_control_input(control, unique_key, ai_feedback=None):
         
         # Maturity Selector (The Slider)
         options = ["Not Implemented (0)", "Initial (1)", "Defined (2)", "Managed (3)", "Measured (4)", "Optimized (5)"]
-        current_idx = max(0, min(5, int(current_val) if isinstance(current_val, (int, float)) else 0))
         
         # Close the Glass Card div before rendering Streamlit widgets (safety first)
         st.markdown("</div>", unsafe_allow_html=True)
