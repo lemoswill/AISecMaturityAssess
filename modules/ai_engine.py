@@ -24,8 +24,8 @@ class AIEngine:
         else:
             self.vector_store = Chroma(persist_directory=PERSIST_DIRECTORY, embedding_function=self.embeddings)
             
-    def ingest_file(self, filename):
-        """Reads file from evidence/, chunks it, and adds to ChromaDB"""
+    def ingest_file(self, filename, framework_tag="NIST"):
+        """Reads file from evidence/, chunks it, and adds to ChromaDB with framework metadata"""
         file_path = os.path.join(evidence.EVIDENCE_DIR, filename)
         text = evidence.extract_text(file_path)
         
@@ -37,7 +37,7 @@ class AIEngine:
         chunks = text_splitter.split_text(text)
         
         # Create Metadata
-        metadatas = [{"source": filename} for _ in chunks]
+        metadatas = [{"source": filename, "framework": framework_tag} for _ in chunks]
         
         # Add to Vector Store
         self.vector_store.add_texts(texts=chunks, metadatas=metadatas)
@@ -69,8 +69,8 @@ class AIEngine:
         if not docs:
             return {"score": 0, "justification": "No evidence found in uploaded documents (Local Vector Store).", "sources": []}
             
-        context_str = "\n\n".join([f"SOURCE ({d.metadata['source']}): {d.page_content}" for d in docs])
-        sources = list(set([d.metadata['source'] for d in docs]))
+        context_str = "\n\n".join([f"SOURCE ({d.metadata['source']} | Framework: {d.metadata.get('framework', 'NIST')}): {d.page_content}" for d in docs])
+        sources = list(set([f"{d.metadata['source']} [{d.metadata.get('framework', 'NIST')}]" for d in docs]))
         
         # 2. Call LLM
         try:
@@ -121,7 +121,7 @@ class AIEngine:
             
             TASK:
             1. Assign a Score (0 = No evidence, 1-2 = Partial, 3-4 = Good, 5 = Perfect).
-            2. Provide a Justification citing the specific source file and content.
+            2. Provide a Justification citing the specific source file AND the framework tag identified in the context (e.g., "Found in Policy.pdf under the NIST AI RMF context...").
             
             OUTPUT FORMAT (JSON ONLY, NO MARKDOWN, NO CODE BLOCKS):
             {{
