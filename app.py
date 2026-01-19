@@ -679,6 +679,9 @@ if page == "Assessment":
 elif page == "Executive Dashboard":
     ui.display_header("Executive Security Dashboard", "Real-Time Governance & Maturity Analysis")
     
+    # Auto-generated Executive Summary (placeholder, will be populated after metrics calculation)
+    summary_placeholder = st.empty()
+    
     df = storage.load_history()
     
     # Check if we have history, otherwise use Demo Data / Current Session
@@ -756,6 +759,8 @@ elif page == "Executive Dashboard":
             # Mock Gaps count (Controls < 3)
             critical_gaps = details_df[details_df['score'] < 3].shape[0]
             compliance_pct = (details_df[details_df['score'] >= 3].shape[0] / details_df.shape[0]) * 100 if details_df.shape[0] > 0 else 0
+            open_risks = critical_gaps  # Same as critical_gaps
+            controls_implemented = details_df[details_df['score'] >= 3].shape[0]
             
     else:
         # DEMO / EMPTY STATE
@@ -766,6 +771,8 @@ elif page == "Executive Dashboard":
         category_scores = {'GOVERN': 3.8, 'MAP': 3.2, 'MEASURE': 2.9, 'MANAGE': 3.5}
         critical_gaps = 12
         compliance_pct = 68
+        open_risks = 12  # Demo: count of controls < 3
+        controls_implemented = 92  # Demo: count of controls >= 3
         details_df = pd.DataFrame() # Initialize empty for safety
         
     # === ROI CONFIGURATION ===
@@ -778,6 +785,16 @@ elif page == "Executive Dashboard":
 
     # Calculate ROI based on score
     roi_results = roi.calculate_roi(total_avg_score, baseline_breach_cost=breach_cost, prob_low_maturity=prob_rate)
+    
+    # Generate Executive Summary
+    if total_avg_score >= 4.5:
+        summary_text = f"Organization is operating at **{maturity_level}** security maturity with no critical gaps identified. Estimated annual risk reduction: **${roi_results['estimated_savings']/1000000:.1f}M**."
+    elif total_avg_score >= 3.0:
+        summary_text = f"Organization is at **{maturity_level}** maturity with **{critical_gaps}** areas requiring attention. Current risk posture shows **{roi_results['reduction_pct']:.0f}%** improvement over baseline."
+    else:
+        summary_text = f"Organization is at **{maturity_level}** maturity with **{critical_gaps}** critical gaps. Immediate action recommended to reduce **${roi_results['current_exposure']/1000000:.1f}M** annual loss exposure."
+    
+    summary_placeholder.info(f"📊 **Executive Summary**: {summary_text}")
     
     # === ROW 1: HEADLINE METRICS ===
     # Gauge + 3 KPI Cards
@@ -805,8 +822,8 @@ elif page == "Executive Dashboard":
         with kpi_col2:
              st.markdown(f"""
                 <div class="glass-card" style="text-align: center; border-top: 4px solid #EF4444 !important;">
-                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Critical Gaps</p>
-                    <h2 style="color: #EF4444; font-size: 1.8rem; margin: 10px 0;">{critical_gaps}</h2>
+                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Open Risks</p>
+                    <h2 style="color: #EF4444; font-size: 1.8rem; margin: 10px 0;">{open_risks}</h2>
                     <p style="color: #64748B; font-size: 0.8rem;">To Remediate</p>
                 </div>
             """, unsafe_allow_html=True)
