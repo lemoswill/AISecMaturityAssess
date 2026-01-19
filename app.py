@@ -88,15 +88,9 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# Handle programmatic navigation
-if 'navigate_to' in st.session_state:
-    page = st.session_state['navigate_to']
-    del st.session_state['navigate_to']
-else:
-    # Custom styled radio buttons
     with st.sidebar:
         st.markdown("### NAVIGATION")
-        page = st.radio("Go to", ["Executive Dashboard", "Assessment", "Evidence Locker"], label_visibility="collapsed")
+        page = st.radio("Go to", ["Executive Dashboard", "Assessment", "Evidence Locker"], key="sidebar_nav", label_visibility="collapsed")
         
         st.divider()
         st.markdown("---")
@@ -683,6 +677,40 @@ elif page == "Executive Dashboard":
             category_scores = details_df.groupby('category')['score'].mean().to_dict()
             # Calculate Total Score
             sel_row = df[df['id'] == selected_id].iloc[0]
+            
+            with col_date:
+                st.write("") # Spacer
+                if st.button("✏️ Edit / Clone", help="Load this assessment to modify responses", use_container_width=True):
+                    # Load Data
+                    st.session_state['project_name_input'] = f"Copy of {sel_row['project_name']}"
+                    
+                    # Set Scope
+                    sc = sel_row.get('scope', 'org')
+                    pt = sel_row.get('project_type', 'none')
+                    
+                    if sc.lower() == 'org': st.session_state['scope_mode'] = 'Organization'
+                    else: 
+                        st.session_state['scope_mode'] = 'Project'
+                        st.session_state['project_type_sel'] = 'Cloud' if 'cloud' in pt.lower() else 'SaaS'
+                    
+                    # Populate Responses
+                    new_responses = {}
+                    for _, r in details_df.iterrows():
+                        # Reconstruct Key: score_{scope}_{type}_{subcat}_{id}
+                        subcat = mappings.get_subcat_from_id(r['question_id'])
+                        if subcat != "Unmapped":
+                             key = f"score_{sc}_{pt}_{subcat}_{r['question_id']}"
+                             new_responses[key] = r['score']
+                             st.session_state[key] = r['score'] # Update Widget Key
+                             
+                             # Restore AI/Notes if possible?
+                             # Notes are in r['notes'], but AI widgets use separate keys.
+                             # For MVP, restoring Scores is the critical part.
+                    
+                    st.session_state['responses'] = new_responses
+                    st.toast("Assessment Loaded! Redirecting...")
+                    st.session_state['sidebar_nav'] = "Assessment"
+                    st.rerun()
             total_avg_score = sel_row['total_score']
             maturity_level = sel_row['maturity_level']
             # Mock Gaps count (Controls < 3)
@@ -800,7 +828,10 @@ elif page == "Executive Dashboard":
             # 1. Get NIST Subcategory (e.g. GOVERN 1.1)
             display_df['nist_subcat'] = display_df['question_id'].apply(mappings.get_subcat_from_id)
             
-            # 2. Get Framework Mappings
+            # 2. Get Requirement Text
+            display_df['Requirement'] = display_df['question_id'].apply(lambda x: mappings.get_control_info(x)['text'])
+            
+            # 3. Get Framework Mappings
             def get_map(subcat, framework):
                 m = mappings.get_compliance_mapping(subcat)
                 return m.get(framework, '-')
@@ -810,16 +841,16 @@ elif page == "Executive Dashboard":
             display_df['EU AI Act'] = display_df['nist_subcat'].apply(lambda x: get_map(x, 'eu_ai_act'))
             
             # Safely filter columns
-            cols_to_show = ['category', 'question_id', 'score', 'notes', 'NIST GenAI (600-1)', 'ISO 27001', 'EU AI Act']
+            cols_to_show = ['category', 'question_id', 'Requirement', 'score', 'notes', 'NIST GenAI (600-1)', 'ISO 27001', 'EU AI Act']
             available_cols = [c for c in cols_to_show if c in display_df.columns]
             display_df = display_df[available_cols]
             
             # Rename for users
             col_map = {
                 'category': 'Function',
-                'question_id': 'Control ID',
+                'question_id': 'ID',
                 'score': 'Score',
-                'notes': 'Response/Details'
+                'notes': 'Justification/Notes'
             }
             display_df = display_df.rename(columns=col_map)
             
@@ -837,7 +868,8 @@ elif page == "Executive Dashboard":
                         help="Score 0 to 5",
                         format="%d ⭐"
                     ),
-                    "Response/Details": st.column_config.TextColumn("Explanation", width="medium"),
+                    "Requirement": st.column_config.TextColumn("Control Requirement", width="large"),
+                    "Justification/Notes": st.column_config.TextColumn("Justification", width="medium"),
                     "NIST GenAI (600-1)": st.column_config.TextColumn("NIST 600-1 (GenAI)", width="medium"),
                     "ISO 27001": st.column_config.TextColumn("ISO 27001 Mapping", width="small")
                 }
