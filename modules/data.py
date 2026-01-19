@@ -1,21 +1,25 @@
 import json
 import os
 
+from modules import i18n
+
 # Weighted Waves for Staged Assessment
-MATURITY_WAVES = {
-    1: "1. Foundation & Governance",
-    2: "2. Security & Verification",
-    3: "3. Operations & Optimization"
-}
+def get_maturity_waves():
+    return {
+        1: i18n.t("maturity_foundation"),
+        2: i18n.t("maturity_security"),
+        3: i18n.t("maturity_ops")
+    }
 
 # NIST AI RMF Categories (Top Level)
-NIST_FUNCTIONS = {
-    "GOVERN": "Cultivate a culture of risk management.",
-    "MAP": "Context recognized and risks identified.",
-    "MEASURE": "Assessed, analyzed, and tracked.",
-    "MANAGE": "Prioritize and act upon risks.",
-    "CSA_EXTRA": "Additional CSA AICM requirements not directly mapped to NIST AI RMF."
-}
+def get_nist_functions():
+    return {
+        "GOVERN": i18n.t("nist_govern"),
+        "MAP": i18n.t("nist_map"),
+        "MEASURE": i18n.t("nist_measure"),
+        "MANAGE": i18n.t("nist_manage"),
+        "CSA_EXTRA": i18n.t("nist_csa")
+    }
 
 # Variable to hold the loaded data
 ASSESSMENT_DATA = {}
@@ -59,12 +63,24 @@ def load_data():
     ]
     
     loaded = False
+    
+    # Decide which file to load based on language
+    lang = i18n.get_lang()
+    data_file = "data_pt.json" if lang == "pt" else "data.json"
+    
+    paths = [
+        data_file,
+        os.path.join(os.path.dirname(__file__), "..", data_file),
+        "data.json", # Fallback
+        os.path.join(os.path.dirname(__file__), "..", "data.json")
+    ]
+    
     for p in paths:
         if os.path.exists(p):
             try:
                 with open(p, 'r', encoding='utf-8') as f:
                     data = json.load(f)
-                    ASSESSMENT_DATA.update(data)
+                    ASSESSMENT_DATA = data # Overwrite instead of update for clean switch
                 loaded = True
                 break
             except Exception as e:
