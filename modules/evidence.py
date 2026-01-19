@@ -8,7 +8,10 @@ EVIDENCE_DIR = "evidence"
 if not os.path.exists(EVIDENCE_DIR):
     os.makedirs(EVIDENCE_DIR)
 
-def save_uploaded_file(uploaded_file):
+import json
+import datetime
+
+def save_uploaded_file(uploaded_file, framework_tag="NIST"):
     try:
         if uploaded_file is None:
             return None
@@ -19,10 +22,41 @@ def save_uploaded_file(uploaded_file):
         with open(file_path, "wb") as f:
             f.write(uploaded_file.getbuffer())
             
+        # Save Metadata sidecar
+        save_metadata(uploaded_file.name, os.path.splitext(uploaded_file.name)[1].upper().replace(".", ""), framework_tag)
+            
         return file_path
     except Exception as e:
         print(f"Error saving file: {e}")
         return None
+
+def save_metadata(filename, doc_type, framework_tag="NIST"):
+    metadata_path = os.path.join(EVIDENCE_DIR, f"{filename}.json")
+    metadata = {
+        "filename": filename,
+        "type": doc_type,
+        "upload_date": datetime.datetime.now().strftime("%Y-%m-%d %H:%M"),
+        "framework": framework_tag,
+        "uploaded_by": "Security Audit Bot"
+    }
+    with open(metadata_path, "w") as f:
+        json.dump(metadata, f)
+
+def get_metadata(filename):
+    metadata_path = os.path.join(EVIDENCE_DIR, f"{filename}.json")
+    if os.path.exists(metadata_path):
+        try:
+            with open(metadata_path, "r") as f:
+                return json.load(f)
+        except:
+            pass
+    return {
+        "filename": filename,
+        "type": os.path.splitext(filename)[1].upper().replace(".", ""),
+        "upload_date": "Historical",
+        "framework": "NIST",
+        "uploaded_by": "System"
+    }
 
 def extract_text(file_path):
     """

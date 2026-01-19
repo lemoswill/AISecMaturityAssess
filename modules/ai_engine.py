@@ -142,8 +142,32 @@ class AIEngine:
             result['sources'] = sources
             return result
             
+    def validate_api_key(self, api_key, provider, model_name=None):
+        """Attempts a very simple call to validate the API key/connection"""
+        try:
+            if not api_key and provider != "Ollama":
+                return False, "API Key is required"
+                
+            if provider == "OpenAI":
+                llm = ChatOpenAI(api_key=api_key, model=model_name if model_name else "gpt-3.5-turbo", max_tokens=5)
+                llm.invoke([HumanMessage(content="hi")])
+            elif provider == "Gemini":
+                llm = ChatGoogleGenerativeAI(google_api_key=api_key, model=model_name if model_name else "gemini-pro", max_output_tokens=5)
+                llm.invoke([HumanMessage(content="hi")])
+            elif provider == "Perplexity":
+                llm = ChatOpenAI(api_key=api_key, base_url="https://api.perplexity.ai", model=model_name if model_name else "sonar", max_tokens=5)
+                llm.invoke([HumanMessage(content="hi")])
+            elif provider == "Ollama":
+                import urllib.request
+                url = f"{api_key.rstrip('/')}/api/tags"
+                with urllib.request.urlopen(url, timeout=2) as response:
+                    return True, "Ollama connection successful"
+            else:
+                return False, f"Unsupported provider: {provider}"
+                
+            return True, "Key validated successfully"
         except Exception as e:
-            return {"error": str(e), "score": 0, "justification": f"LLM Error ({provider}): {str(e)}"}
+            return False, f"Validation failed: {str(e)}"
 
     def list_local_models(self, base_url="http://localhost:11434"):
         """Fetches list of available models from local Ollama instance"""
