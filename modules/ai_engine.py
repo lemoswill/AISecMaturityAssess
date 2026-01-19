@@ -141,7 +141,9 @@ class AIEngine:
             result = json.loads(content)
             result['sources'] = sources
             return result
-            
+        except Exception as e:
+            return {"error": str(e), "score": 0, "justification": f"LLM Error ({provider}): {str(e)}"}
+
     def validate_api_key(self, api_key, provider, model_name=None):
         """Attempts a very simple call to validate the API key/connection"""
         try:
