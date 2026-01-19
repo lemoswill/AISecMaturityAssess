@@ -92,7 +92,18 @@ st.sidebar.markdown("""
 # Custom styled radio buttons
 with st.sidebar:
     st.markdown("### NAVIGATION")
-    page = st.radio("Go to", ["Executive Dashboard", "Assessment", "Evidence Locker"], key="sidebar_nav", label_visibility="collapsed")
+    # Determine default index based on session state override
+    nav_options = ["Executive Dashboard", "Assessment", "Evidence Locker"]
+    default_ix = 0
+    if st.session_state.get('nav_override'):
+        try:
+            default_ix = nav_options.index(st.session_state['nav_override'])
+            # Clear it so it doesn't stick
+            del st.session_state['nav_override']
+        except:
+            pass
+            
+    page = st.radio("Go to", nav_options, index=default_ix, key="sidebar_nav", label_visibility="collapsed")
         
     st.divider()
     st.markdown("---")
@@ -719,7 +730,10 @@ elif page == "Executive Dashboard":
                     
                     st.session_state['responses'] = new_responses
                     st.toast("Assessment Loaded! Redirecting...")
-                    st.session_state['sidebar_nav'] = "Assessment"
+                    st.session_state['responses'] = new_responses
+                    st.toast("Assessment Loaded! Redirecting...")
+                    # Safe Navigation Switch
+                    st.session_state['nav_override'] = "Assessment"
                     st.rerun()
             total_avg_score = sel_row['total_score']
             maturity_level = sel_row['maturity_level']
