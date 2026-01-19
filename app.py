@@ -6,7 +6,8 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 
 import streamlit as st
 import pandas as pd
-from modules import ui, storage, data, evidence, ai_engine, mappings, charts
+import datetime
+from modules import ui, storage, data, evidence, ai_engine, mappings, charts, reporting
 
 # --- Configuration ---
 st.set_page_config(
@@ -735,7 +736,8 @@ elif page == "Executive Dashboard":
     
     with col_gauge:
         st.markdown('<div class="glass-card" style="height: 100%; display: flex; align-items: center; justify-content: center;">', unsafe_allow_html=True)
-        charts.plot_gauge_chart(total_avg_score)
+        fig_gauge = charts.plot_gauge_chart(total_avg_score)
+        st.plotly_chart(fig_gauge, use_container_width=True, config={'displayModeBar': False})
         st.markdown('</div>', unsafe_allow_html=True)
         
     with col_kpi:
@@ -773,15 +775,18 @@ elif page == "Executive Dashboard":
     col_radar, col_bench = st.columns([1, 1])
     
     with col_radar:
-        st.subheader("🛡️ NIST AI RMF Profile")
-        final_cat_names = list(category_scores.keys())
-        final_cat_scores = list(category_scores.values())
-        charts.plot_radar_chart(final_cat_names, final_cat_scores)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("### �️ NIST AI RMF Profile")
+        fig_radar = charts.plot_radar_chart(category_scores, list(category_scores.values()))
+        st.plotly_chart(fig_radar, use_container_width=True, config={'displayModeBar': False})
+        st.markdown('</div>', unsafe_allow_html=True)
         
     with col_bench:
-        st.subheader("📊 Industry Benchmark")
-        # Reuse available scores
-        charts.plot_benchmark_chart(category_scores)
+        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
+        st.markdown("### 📊 Industry Benchmark")
+        fig_bench = charts.plot_benchmark_chart(category_scores)
+        st.plotly_chart(fig_bench, use_container_width=True, config={'displayModeBar': False})
+        st.markdown('</div>', unsafe_allow_html=True)
 
     # === ROW 3: STRATEGIC ROADMAP (Simple Table for MVP) ===
     st.subheader("🚀 Recommended Actions (Strategic Roadmap)")
@@ -815,6 +820,46 @@ elif page == "Executive Dashboard":
         </table>
     </div>
     """, unsafe_allow_html=True)
+
+    # === REPORT GENERATION ===
+    if 'fig_gauge' in locals() and 'fig_radar' in locals():
+        st.markdown("### 📄 Executive Reporting")
+        col_rep_btn, col_rep_info = st.columns([1, 3])
+        
+        with col_rep_btn:
+            # Prepare Data
+            metrics = {
+                'score': total_avg_score,
+                'maturity': maturity_level,
+                'gaps': critical_gaps,
+                'compliance': compliance_pct
+            }
+            charts_dict = {
+                'gauge': fig_gauge,
+                'radar': fig_radar,
+                'benchmark': fig_bench if 'fig_bench' in locals() else None
+            }
+            meta = {
+                'org': st.session_state.get('project_name', 'My Organization'),
+                'date': sel_row['date'] if 'sel_row' in locals() else datetime.date.today().strftime("%Y-%m-%d"),
+                'scope': st.session_state.get('scope_mode', 'Organization')
+            }
+            
+            # Generate HTML
+            # Lazy load: only generate when needed? No, Streamlit needs data for btn.
+            # Efficient enough for local execution.
+            if 'details_df' not in locals(): details_df = pd.DataFrame() # Handle empty
+            html_report = reporting.generate_html_report(metrics, charts_dict, details_df, meta)
+            
+            st.download_button(
+                label="📥 Download PDF Report (Printable)",
+                data=html_report,
+                file_name=f"executive_report_{meta['date']}.html",
+                mime="text/html",
+                help="Download a high-quality HTML report. Open it and use 'Print to PDF' for the final document."
+            )
+        with col_rep_info:
+             st.info("💡 **Pro Tip:** Open the downloaded HTML and use **Ctrl+P (Save as PDF)** for a vector-quality Board Report.")
 
     # === ROW 4: DETAILED AUDIT & COMPLIANCE LOG ===
     if 'details_df' in locals() and not details_df.empty:
