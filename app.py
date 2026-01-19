@@ -7,7 +7,7 @@ sys.modules['sqlite3'] = sys.modules.pop('pysqlite3')
 import streamlit as st
 import pandas as pd
 import datetime
-from modules import ui, storage, data, utils, charts, reporting, i18n, ai_engine, scoring, adapter, indicators, evidence, mappings, roi
+from modules import ui, storage, data, charts, reporting, i18n, ai_engine, scoring, adapter, indicators, evidence, mappings, roi
 
 # --- Configuration ---
 st.set_page_config(
