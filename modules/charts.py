@@ -48,14 +48,18 @@ def plot_radar_chart(categories, scores):
 def plot_bar_chart(data_dict):
     """
     Generate a Silicon Precision Bar Chart with professional gradients.
-    """
-    categories = list(data_dict.keys())
-    scores = list(data_dict.values())
+    if not data_dict:
+        return go.Figure()
+
+    df = pd.DataFrame([
+        {'Domain': k, 'Maturity': v} for k, v in data_dict.items()
+    ])
     
     fig = px.bar(
-        x=categories, 
-        y=scores,
-        color=scores,
+        df,
+        x='Domain', 
+        y='Maturity',
+        color='Maturity',
         color_continuous_scale=[[0, '#DBEAFE'], [0.5, '#3B82F6'], [1, '#1E3A8A']],
         range_y=[0, 5],
         text_auto='.1f'
