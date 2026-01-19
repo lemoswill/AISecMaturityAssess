@@ -939,15 +939,51 @@ elif page == "Executive Dashboard":
     
     summary_placeholder.info(f"📊 **Executive Summary**: {summary_text}")
     
+    # === INSIGHTS CALCULATION ===
+    # Identify strongest and weakest pillars for "Precision Insights"
+    if category_scores:
+        strongest_func = max(category_scores, key=category_scores.get)
+        weakest_func = min(category_scores, key=category_scores.get)
+        strength_val = category_scores[strongest_func]
+        weak_val = category_scores[weakest_func]
+    else:
+        strongest_func, weakest_func, strength_val, weak_val = "N/A", "N/A", 0, 0
+
+    # Quick Win: Find a control in the weakest domain with score < 2
+    quick_win = "N/A"
+    if not details_df.empty:
+        low_controls = details_df[(details_df['category'] == weakest_func) & (details_df['score'] < 3)]
+        if not low_controls.empty:
+            quick_win = low_controls.iloc[0]['question_id']
+    
     # === ROW 1: HEADLINE METRICS ===
     # Gauge + 3 KPI Cards
     col_gauge, col_kpi = st.columns([1.5, 2.5])
     
     with col_gauge:
-        st.markdown('<div class="glass-card" style="height: 100%; display: flex; align-items: center; justify-content: center;">', unsafe_allow_html=True)
+        # Card 1: Executive Posture (Filling the top gap)
+        st.markdown(f"""
+            <div class="glass-card" style="padding: 1rem 1.5rem; margin-bottom: 1rem; border-left: 4px solid #6366F1 !important;">
+                <p style="color: #64748B; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_posture")}</p>
+                <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                    <span style="font-size: 1.1rem; font-weight: 700; color: #1E293B;">{i18n.t("current_label")}: {total_avg_score:.1f}</span>
+                    <span style="font-size: 0.8rem; color: #64748B;">{i18n.t("target_label")}: 4.5</span>
+                </div>
+            </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(f'<h3 style="text-align: center; color: #1E293B; font-size: 1rem; margin-bottom: -10px;">Security Maturity Score</h3>', unsafe_allow_html=True)
         fig_gauge = charts.plot_gauge_chart(total_avg_score)
         st.plotly_chart(fig_gauge, width='stretch', config={'displayModeBar': False})
-        st.markdown('</div>', unsafe_allow_html=True)
+        
+        # Card 2: Strategic Strength (Filling the bottom left gap)
+        st.markdown(f"""
+            <div class="glass-card" style="padding: 1rem 1.5rem; margin-top: -20px; border-left: 4px solid #10B981 !important;">
+                <p style="color: #64748B; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_strength")}</p>
+                <span style="font-size: 0.95rem; font-weight: 600; color: #065F46;">{strongest_func}</span>
+                <span style="font-size: 0.8rem; color: #059669; display: block;">{i18n.t("leading_pillar")} {strength_val:.1f}/5.0</span>
+            </div>
+        """, unsafe_allow_html=True)
         
     with col_kpi:
         # 4 KPI Cards Layout
@@ -989,30 +1025,38 @@ elif page == "Executive Dashboard":
                 </div>
             """, unsafe_allow_html=True)
             
+        # Card 3: Quick Win Insight (Filling the bottom right gap under metrics)
+        st.markdown(f"""
+            <div class="glass-card" style="padding: 1rem 1.5rem; margin-top: 1rem; border-left: 4px solid #F59E0B !important;">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <div style="background: #FFFBEB; padding: 4px; border-radius: 6px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                    </div>
+                    <p style="color: #92400E; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin: 0;">{i18n.t("insight_quick_win")}</p>
+                </div>
+                <p style="font-size: 0.85rem; font-weight: 600; color: #78350F; margin: 6px 0 2px 0;">Remediate {quick_win}</p>
+                <span style="font-size: 0.75rem; color: #92400E;">{i18n.t("fastest_path")} {weakest_func} {i18n.t("posture_label")}.</span>
+            </div>
+        """, unsafe_allow_html=True)
+            
     # === ROW 2: DETAILED ANALYSIS ===
     col_radar, col_bench = st.columns([1, 1])
     
     with col_radar:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("### 🕸️ NIST AI RMF Profile")
         fig_radar = charts.plot_radar_chart(list(category_scores.keys()), list(category_scores.values()))
         st.plotly_chart(fig_radar, width='stretch', config={'displayModeBar': False})
-        st.markdown('</div>', unsafe_allow_html=True)
         
     with col_bench:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.markdown("### 📊 Industry Benchmark")
         fig_bench = charts.plot_benchmark_chart(category_scores)
         st.plotly_chart(fig_bench, width='stretch', config={'displayModeBar': False})
-        st.markdown('</div>', unsafe_allow_html=True)
 
     # === ROW 3: RISK MATRIX ===
     st.subheader("🎯 Priority Risk Matrix")
     fig_risk = charts.plot_risk_heatmap(details_df)
     if fig_risk:
-        st.markdown('<div class="glass-card">', unsafe_allow_html=True)
         st.plotly_chart(fig_risk, width='stretch')
-        st.markdown('</div>', unsafe_allow_html=True)
     else:
         st.success("✅ No critical gaps identified! Risk exposure is minimal.")
 
