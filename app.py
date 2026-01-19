@@ -463,6 +463,7 @@ if page == "Assessment":
                                 "category": func,
                                 "question_id": control['id'],
                                 "score": score,
+                                "notes": f"{ai_data.get('justification', '')}\nSources: {', '.join(ai_data.get('sources', [])) if ai_data.get('sources') else ''}",
                                 "ai_justification": ai_data.get('justification', ''),
                                 "ai_sources": ", ".join(ai_data.get('sources', [])) if ai_data.get('sources') else '',
                                 "mapping": subcat_key
@@ -613,7 +614,7 @@ if page == "Assessment":
                             
                             if active_key:
                                 col_btn, col_empty = st.columns([1, 4])
-                                if col_btn.button("✨ Auto-Assess", key=f"btn_{unique_id}_{scope_key}_{type_type}", help=f"Analyze with {current_provider}"):
+                                if col_btn.button("✨ Auto-Assess", key=f"btn_{unique_id}_{scope_key}_{type_key}", help=f"Analyze with {current_provider}"):
                                     # Logic...
                                     # Since this is replicated, we should assume the helper logic works the same
                                     # But we need access to engine etc.
@@ -794,35 +795,47 @@ elif page == "Executive Dashboard":
             
             # Prepare DataFrame for Display
             display_df = details_df.copy()
-        display_df = display_df[['category', 'question_id', 'score', 'response', 'evidence']]
-        display_df.columns = ['Function', 'Control ID', 'Score', 'Response/Notes', 'Evidence']
-        
-        # Style
-        def color_score(val):
-            color = '#EF4444' if val < 3 else '#10B981' if val >= 3 else '#3B82F6'
-            return f'color: {color}; font-weight: bold'
             
-        st.dataframe(
-            display_df.style.map(color_score, subset=['Score']),
-            use_container_width=True,
-            column_config={
-                "Score": st.column_config.NumberColumn(
-                    "Maturity (0-5)",
-                    help="Score 0 to 5",
-                    format="%d ⭐"
-                ),
-                "Evidence": st.column_config.LinkColumn("Evidence Link")
+            # Safely filter columns
+            cols_to_show = ['category', 'question_id', 'score', 'notes']
+            available_cols = [c for c in cols_to_show if c in display_df.columns]
+            display_df = display_df[available_cols]
+            
+            # Rename for users
+            col_map = {
+                'category': 'Function',
+                'question_id': 'Control ID',
+                'score': 'Score',
+                'notes': 'Response/Details'
             }
-        )
-        
-        # Export Button
-        csv = display_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download Detailed CSV",
-            data=csv,
-            file_name=f"assessment_details_{selected_id}.csv",
-            mime="text/csv",
-        )
+            display_df = display_df.rename(columns=col_map)
+            
+            # Style
+            def color_score(val):
+                color = '#EF4444' if (isinstance(val, (int, float)) and val < 3) else '#10B981'
+                return f'color: {color}; font-weight: bold'
+                
+            st.dataframe(
+                display_df.style.map(color_score, subset=['Score']) if 'Score' in display_df.columns else display_df,
+                use_container_width=True,
+                column_config={
+                    "Score": st.column_config.NumberColumn(
+                        "Maturity (0-5)",
+                        help="Score 0 to 5",
+                        format="%d ⭐"
+                    ),
+                    "Response/Details": st.column_config.TextColumn("Explanation", width="large")
+                }
+            )
+            
+            # Export Button
+            csv = display_df.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Detailed CSV",
+                data=csv,
+                file_name=f"assessment_details_{selected_id if 'selected_id' in locals() else 'snapshot'}.csv",
+                mime="text/csv",
+            )
 
 elif page == "Evidence Locker":
     ui.display_header("Evidence Locker", "Manage your uploaded documents")
