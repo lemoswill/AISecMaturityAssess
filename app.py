@@ -88,12 +88,13 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-    with st.sidebar:
-        st.markdown("### NAVIGATION")
-        page = st.radio("Go to", ["Executive Dashboard", "Assessment", "Evidence Locker"], key="sidebar_nav", label_visibility="collapsed")
+# Custom styled radio buttons
+with st.sidebar:
+    st.markdown("### NAVIGATION")
+    page = st.radio("Go to", ["Executive Dashboard", "Assessment", "Evidence Locker"], key="sidebar_nav", label_visibility="collapsed")
         
-        st.divider()
-        st.markdown("---")
+    st.divider()
+    st.markdown("---")
 
 # Architecture Info Card
 st.sidebar.markdown(f"""
