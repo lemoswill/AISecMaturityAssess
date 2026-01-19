@@ -956,86 +956,82 @@ elif page == "Executive Dashboard":
         if not low_controls.empty:
             quick_win = low_controls.iloc[0]['question_id']
     
-    # === ROW 1: HEADLINE METRICS ===
-    # Gauge + 3 KPI Cards
-    col_gauge, col_kpi = st.columns([1.5, 2.5])
+    # === ROW 1: HEADLINE METRICS (SYMMETRIC 4-COLUMN) ===
+    kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
     
-    with col_gauge:
-        # Card 1: Executive Posture (Filling the top gap)
+    with kpi_col1:
         st.markdown(f"""
-            <div class="glass-card" style="padding: 1rem 1.5rem; margin-bottom: 1rem; border-left: 4px solid #6366F1 !important;">
-                <p style="color: #64748B; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_posture")}</p>
-                <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                    <span style="font-size: 1.1rem; font-weight: 700; color: #1E293B;">{i18n.t("current_label")}: {total_avg_score:.1f}</span>
-                    <span style="font-size: 0.8rem; color: #64748B;">{i18n.t("target_label")}: 4.5</span>
-                </div>
+            <div class="glass-card" style="text-align: center; border-top: 4px solid #10B981 !important; height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{i18n.t("label_maturity")}</p>
+                <h2 style="color: #10B981; font-size: 1.8rem; margin: 5px 0;">{maturity_level}</h2>
+                <p style="color: #64748B; font-size: 0.8rem;">{i18n.t("sub_current_status")}</p>
             </div>
         """, unsafe_allow_html=True)
         
-        st.markdown(f'<h3 style="text-align: center; color: #1E293B; font-size: 1rem; margin-bottom: -10px;">Security Maturity Score</h3>', unsafe_allow_html=True)
+    with kpi_col2:
+            st.markdown(f"""
+            <div class="glass-card" style="text-align: center; border-top: 4px solid #EF4444 !important; height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{i18n.t("label_risks")}</p>
+                <h2 style="color: #EF4444; font-size: 1.8rem; margin: 5px 0;">{open_risks}</h2>
+                <p style="color: #64748B; font-size: 0.8rem;">{i18n.t("sub_remediate")}</p>
+            </div>
+        """, unsafe_allow_html=True)
+        
+    with kpi_col3:
+            st.markdown(f"""
+            <div class="glass-card" style="text-align: center; border-top: 4px solid #3B82F6 !important; height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{i18n.t("label_compliance")}</p>
+                <h2 style="color: #3B82F6; font-size: 1.8rem; margin: 5px 0;">{compliance_pct:.0f}%</h2>
+                <p style="color: #64748B; font-size: 0.8rem;">{i18n.t("sub_aligned")}</p>
+            </div>
+        """, unsafe_allow_html=True)
+
+    with kpi_col4:
+        st.markdown(f"""
+            <div class="glass-card" style="text-align: center; border-top: 4px solid #4F46E5 !important; height: 180px; display: flex; flex-direction: column; justify-content: center;">
+                <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">{i18n.t("label_reduction")}</p>
+                <h2 style="color: #4F46E5; font-size: 1.8rem; margin: 5px 0;">${roi_results['estimated_savings']/1000000:.1f}M</h2>
+                <p style="color: #64748B; font-size: 0.8rem;">{i18n.t("sub_savings")}</p>
+            </div>
+        """, unsafe_allow_html=True)
+            
+    # === ROW 2: VISUAL + STRATEGIC BRIEFING ===
+    col_gauge, col_strategy = st.columns([1, 1.2])
+    
+    with col_gauge:
+        st.markdown(f'<h3 style="text-align: center; color: #1E293B; font-size: 1rem; margin-top: 1.5rem; margin-bottom: -15px;">{i18n.t("gauge_title")}</h3>', unsafe_allow_html=True)
         fig_gauge = charts.plot_gauge_chart(total_avg_score)
         st.plotly_chart(fig_gauge, width='stretch', config={'displayModeBar': False})
         
-        # Card 2: Strategic Strength (Filling the bottom left gap)
+    with col_strategy:
         st.markdown(f"""
-            <div class="glass-card" style="padding: 1rem 1.5rem; margin-top: -20px; border-left: 4px solid #10B981 !important;">
-                <p style="color: #64748B; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_strength")}</p>
-                <span style="font-size: 0.95rem; font-weight: 600; color: #065F46;">{strongest_func}</span>
-                <span style="font-size: 0.8rem; color: #059669; display: block;">{i18n.t("leading_pillar")} {strength_val:.1f}/5.0</span>
-            </div>
-        """, unsafe_allow_html=True)
-        
-    with col_kpi:
-        # 4 KPI Cards Layout
-        kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-        
-        with kpi_col1:
-            st.markdown(f"""
-                <div class="glass-card" style="text-align: center; border-top: 4px solid #10B981 !important;">
-                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Maturity Level</p>
-                    <h2 style="color: #10B981; font-size: 1.8rem; margin: 10px 0;">{maturity_level}</h2>
-                    <p style="color: #64748B; font-size: 0.8rem;">Current Status</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        with kpi_col2:
-             st.markdown(f"""
-                <div class="glass-card" style="text-align: center; border-top: 4px solid #EF4444 !important;">
-                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Open Risks</p>
-                    <h2 style="color: #EF4444; font-size: 1.8rem; margin: 10px 0;">{open_risks}</h2>
-                    <p style="color: #64748B; font-size: 0.8rem;">To Remediate</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        with kpi_col3:
-             st.markdown(f"""
-                <div class="glass-card" style="text-align: center; border-top: 4px solid #3B82F6 !important;">
-                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Compliance</p>
-                    <h2 style="color: #3B82F6; font-size: 1.8rem; margin: 10px 0;">{compliance_pct:.0f}%</h2>
-                    <p style="color: #64748B; font-size: 0.8rem;">NIST Aligned</p>
-                </div>
-            """, unsafe_allow_html=True)
-
-        with kpi_col4:
-            st.markdown(f"""
-                <div class="glass-card" style="text-align: center; border-top: 4px solid #3B82F6 !important;">
-                    <p style="color: #64748B; font-size: 0.75rem; font-weight: 700; text-transform: uppercase;">Financial Risk Reduction</p>
-                    <h2 style="color: #3B82F6; font-size: 1.5rem; margin: 10px 0;">${roi_results['estimated_savings']/1000000:.1f}M</h2>
-                    <p style="color: #3B82F6; font-size: 0.8rem; font-weight: 600;">ALE Reduction</p>
-                </div>
-            """, unsafe_allow_html=True)
-            
-        # Card 3: Quick Win Insight (Filling the bottom right gap under metrics)
-        st.markdown(f"""
-            <div class="glass-card" style="padding: 1rem 1.5rem; margin-top: 1rem; border-left: 4px solid #F59E0B !important;">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <div style="background: #FFFBEB; padding: 4px; border-radius: 6px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D97706" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+            <div class="glass-card" style="margin-top: 2rem; padding: 1.5rem; border-left: 6px solid #1E293B !important;">
+                <h3 style="margin-bottom: 20px; font-size: 1.1rem; color: #0F172A; display: flex; align-items: center; gap: 8px;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+                    {i18n.t("briefing_title")}
+                </h3>
+                
+                <div style="background: #F8FAFC; padding: 12px; border-radius: 8px; margin-bottom: 12px; border: 1px solid #E2E8F0;">
+                    <p style="color: #64748B; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_posture")}</p>
+                    <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                        <span style="font-size: 1rem; font-weight: 700; color: #1E293B;">{i18n.t("current_label")}: {total_avg_score:.1f}</span>
+                        <span style="font-size: 0.75rem; color: #64748B;">{i18n.t("target_label")}: 4.5</span>
                     </div>
-                    <p style="color: #92400E; font-size: 0.65rem; font-weight: 800; text-transform: uppercase; margin: 0;">{i18n.t("insight_quick_win")}</p>
                 </div>
-                <p style="font-size: 0.85rem; font-weight: 600; color: #78350F; margin: 6px 0 2px 0;">Remediate {quick_win}</p>
-                <span style="font-size: 0.75rem; color: #92400E;">{i18n.t("fastest_path")} {weakest_func} {i18n.t("posture_label")}.</span>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                    <div style="background: #F0FDF4; padding: 12px; border-radius: 8px; border: 1px solid #DCFCE7;">
+                        <p style="color: #166534; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_strength")}</p>
+                        <p style="font-size: 0.85rem; font-weight: 700; color: #064E3B; margin: 0;">{strongest_func}</p>
+                        <span style="font-size: 0.7rem; color: #15803D;">{i18n.t("leading_pillar")} {strength_val:.1f}</span>
+                    </div>
+                    
+                    <div style="background: #FFFBEB; padding: 12px; border-radius: 8px; border: 1px solid #FEF3C7;">
+                        <p style="color: #92400E; font-size: 0.6rem; font-weight: 800; text-transform: uppercase; margin-bottom: 4px;">{i18n.t("insight_quick_win")}</p>
+                        <p style="font-size: 0.85rem; font-weight: 700; color: #78350F; margin: 0;">{quick_win}</p>
+                        <span style="font-size: 0.7rem; color: #D97706;">{i18n.t("fastest_path")} {weakest_func}</span>
+                    </div>
+                </div>
             </div>
         """, unsafe_allow_html=True)
             
