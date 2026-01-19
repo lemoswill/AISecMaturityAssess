@@ -704,7 +704,14 @@ elif page == "Executive Dashboard":
                         if subcat != "Unmapped":
                              key = f"score_{sc}_{pt}_{subcat}_{r['question_id']}"
                              new_responses[key] = r['score']
-                             st.session_state[key] = r['score'] # Update Widget Key
+                             
+                             # Fix: Widget expects string from options list
+                             options = ["Not Implemented (0)", "Initial (1)", "Defined (2)", "Managed (3)", "Measured (4)", "Optimized (5)"]
+                             try:
+                                 score_idx = max(0, min(5, int(r['score'])))
+                                 st.session_state[key] = options[score_idx]
+                             except:
+                                 st.session_state[key] = options[0]
                              
                              # Restore AI/Notes if possible?
                              # Notes are in r['notes'], but AI widgets use separate keys.
@@ -731,8 +738,16 @@ elif page == "Executive Dashboard":
         compliance_pct = 68
         details_df = pd.DataFrame() # Initialize empty for safety
         
+    # === ROI CONFIGURATION ===
+    with st.expander("⚙️ ROI Assumptions (Click to Configure Financial Model)"):
+        c_cost, c_prob = st.columns(2)
+        with c_cost:
+            breach_cost = st.number_input("Avg. Cost of Data Breach ($)", value=4450000, help="Source: IBM Cost of a Data Breach Report 2023")
+        with c_prob:
+            prob_rate = st.slider("Baseline Incident Probability (Annual)", 0.0, 1.0, 0.35, help="Probability of a significant AI incident without controls (Level 1)")
+
     # Calculate ROI based on score
-    roi_results = roi.calculate_roi(total_avg_score)
+    roi_results = roi.calculate_roi(total_avg_score, baseline_breach_cost=breach_cost, prob_low_maturity=prob_rate)
     
     # === ROW 1: HEADLINE METRICS ===
     # Gauge + 3 KPI Cards
