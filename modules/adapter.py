@@ -1,9 +1,10 @@
 from typing import Dict, List, Any
 from modules import data, scoring
 
-def get_v2_metrics(answers_map: Dict[str, Dict[str, Any]], scope="org", project_type="cloud") -> List[scoring.DomainMetrics]:
+def get_v2_metrics(answers_map: Dict[str, Dict[str, Any]], scope="org", project_type="cloud", selected_frameworks=None) -> List[scoring.DomainMetrics]:
     """
     Adapts the filtered ASSESSMENT_DATA from modules.data into the v2 DomainMetrics structure.
+    Supports filtering by selected_frameworks.
     """
     filtered_data = data.get_controls_for_scope(scope=scope, project_type=project_type)
     
@@ -25,30 +26,36 @@ def get_v2_metrics(answers_map: Dict[str, Dict[str, Any]], scope="org", project_
         subcategories_data = []
         
         for subcat_id, subcat_val in subcats.items():
-            # In v1, subcat_val['description'] is the NIST text
-            # subcat_val['csa_controls'] is the list of questions
-            
             questions = []
             for ctrl in subcat_val.get('csa_controls', []):
+                # Framework Filtering
+                if selected_frameworks:
+                    # If any of the control's frameworks matches selected_frameworks
+                    ctrl_fws = ctrl.get('frameworks', [])
+                    if not any(fw in selected_frameworks for fw in ctrl_fws):
+                        continue
+
                 questions.append({
                     'question_id': ctrl['id'],
                     'text': ctrl['text'],
                     'help': ctrl.get('help', ''),
-                    'domain': ctrl.get('domain', ''), # CSA Domain
-                    'wave': ctrl.get('wave', 1)
+                    'domain': ctrl.get('domain', ''), 
+                    'wave': ctrl.get('wave', 1),
+                    'frameworks': ctrl.get('frameworks', [])
                 })
             
-            # Default weights and criticality based on wave or heuristics
-            # Wave 1 = High, Wave 2 = Medium, Wave 3 = Low
+            if not questions:
+                continue
+
             wave_avg = sum([q['wave'] for q in questions]) / len(questions) if questions else 2
             criticality = "High" if wave_avg <= 1.5 else ("Medium" if wave_avg <= 2.5 else "Low")
             
             subcategories_data.append({
                 'id': subcat_id,
-                'name': subcat_id, # e.g. "GOVERN 1.1"
+                'name': subcat_id, 
                 'questions': questions,
                 'criticality': criticality,
-                'weight': 1.0 # Can be refined later
+                'weight': 1.0 
             })
             
         if subcategories_data:

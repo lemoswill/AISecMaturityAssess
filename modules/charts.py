@@ -247,3 +247,75 @@ def plot_risk_heatmap(details_df):
     )
     
     return fig
+
+def plot_risk_distribution_ring(critical_gaps_count, high_gaps_count, med_gaps_count, low_gaps_count):
+    """
+    Generate a Silicon Precision Ring Chart for risk distribution.
+    """
+    labels = ['Crítico', 'Alto', 'Médio', 'Baixo']
+    values = [critical_gaps_count, high_gaps_count, med_gaps_count, low_gaps_count]
+    colors = ['#EF4444', '#F59E0B', '#FBBF24', '#10B981']
+    
+    fig = go.Figure(data=[go.Pie(
+        labels=labels, 
+        values=values, 
+        hole=.6,
+        marker=dict(colors=colors),
+        textinfo='label+value',
+        textposition='outside',
+        insidetextorientation='radial'
+    )])
+    
+    fig.update_layout(
+        showlegend=True,
+        legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        margin=dict(l=20, r=20, t=20, b=20),
+        height=300,
+        font=dict(family='Inter', size=11)
+    )
+    
+    return fig
+
+def plot_maturity_evolution_chart(history_df):
+    """
+    Generate a Line Chart showing maturity evolution, moving average, and projection.
+    """
+    # Assuming history_df has 'date' and 'score' (0-100 scale)
+    fig = go.Figure()
+    
+    # 1. Actual Maturity Line
+    fig.add_trace(go.Scatter(
+        x=history_df['date'], 
+        y=history_df['score'],
+        mode='lines+markers',
+        name='Maturidade',
+        line=dict(color='#2563EB', width=3),
+        marker=dict(size=8, color='#1E40AF')
+    ))
+    
+    # 2. Moving Average
+    if len(history_df) > 1:
+        history_df = history_df.copy()
+        history_df['ma'] = history_df['score'].rolling(window=3, min_periods=1).mean()
+        fig.add_trace(go.Scatter(
+            x=history_df['date'], 
+            y=history_df['ma'],
+            mode='lines',
+            name='Média Móvel',
+            line=dict(color='#94A3B8', width=2, dash='dash')
+        ))
+    
+    fig.update_layout(
+        xaxis=dict(gridcolor='#F1F5F9', title="Período"),
+        yaxis=dict(gridcolor='#F1F5F9', title="Maturidade (%)", range=[0, 105]),
+        paper_bgcolor='rgba(0,0,0,0)',
+        plot_bgcolor='rgba(0,0,0,0)',
+        legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
+        margin=dict(l=40, r=40, t=40, b=40),
+        height=350,
+        font=dict(family='Inter')
+    )
+    
+    return fig

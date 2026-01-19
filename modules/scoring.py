@@ -1,6 +1,18 @@
 from typing import Dict, List, Optional, Union, Any
 from dataclasses import dataclass
 import math
+from datetime import datetime
+
+@dataclass
+class RoadmapItem:
+    priority: str # 'immediate', 'short', 'medium'
+    timeframe: str # '0-30 dias', etc.
+    domain: str
+    action: str
+    impact: str
+    effort: str # 'low', 'medium', 'high'
+    question_id: str
+    subcat_id: str
 
 @dataclass
 class QuestionScore:
@@ -194,3 +206,41 @@ def calculate_domain_metrics(
         subcategory_metrics=subcat_metrics_list,
         critical_gaps=total_critical_gaps
     )
+
+def generate_roadmap(domain_metrics: List[DomainMetrics], max_items: int = 10) -> List[RoadmapItem]:
+    """
+    Generates a prioritized action plan based on identified critical gaps.
+    """
+    gaps = []
+    for dm in domain_metrics:
+        for sm in dm.subcategory_metrics:
+            if sm.critical_gaps > 0 or sm.score < 0.5:
+                gaps.append(sm)
+    
+    # Sort by criticality (High/Critical first) then score (Lowest first)
+    crit_map = {'Critical': 0, 'High': 1, 'Medium': 2, 'Low': 3}
+    gaps.sort(key=lambda x: (crit_map.get(x.criticality, 2), x.score))
+    
+    roadmap = []
+    for sm in gaps[:max_items]:
+        priority = 'immediate' if sm.criticality in ['High', 'Critical'] and sm.score < 0.3 else \
+                   ('short' if sm.criticality in ['High', 'Critical'] or sm.score < 0.5 else 'medium')
+        
+        timeframe = '0-30 dias' if priority == 'immediate' else \
+                    ('30-60 dias' if priority == 'short' else '60-90 dias')
+        
+        impact = 'Alto impacto em risco' if sm.criticality in ['High', 'Critical'] else 'Médio impacto em risco'
+        effort = 'high' if sm.score < 0.2 else ('medium' if sm.score < 0.5 else 'low')
+        
+        roadmap.append(RoadmapItem(
+            priority=priority,
+            timeframe=timeframe,
+            domain=sm.domain_name if hasattr(sm, 'domain_name') else sm.domain_id,
+            action=f"Implementar controle: {sm.subcat_name}",
+            impact=impact,
+            effort=effort,
+            question_id=sm.subcat_id, # Simplified to subcat for action
+            subcat_id=sm.subcat_id
+        ))
+        
+    return roadmap
