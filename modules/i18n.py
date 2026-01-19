@@ -54,7 +54,9 @@ STRINGS = {
         "sub_remediate": "To Remediate",
         "sub_aligned": "NIST Aligned",
         "sub_savings": "Annual Savings",
-        "gauge_title": "Security Maturity Score"
+        "gauge_title": "Security Maturity Score",
+        "tab_nist_profile": "NIST AI RMF Profile",
+        "tab_solutions_profile": "Solutions Adherence (CSA)"
     },
     "pt": {
         "app_title": "Avaliação de Maturidade em Segurança de IA",
@@ -108,7 +110,9 @@ STRINGS = {
         "sub_remediate": "Para Remediar",
         "sub_aligned": "Alinhado ao NIST",
         "sub_savings": "Economia Anual",
-        "gauge_title": "Pontuação de Maturidade de Segurança"
+        "gauge_title": "Pontuação de Maturidade de Segurança",
+        "tab_nist_profile": "Perfil NIST AI RMF",
+        "tab_solutions_profile": "Aderência a Soluções (CSA)"
     }
 }
 
