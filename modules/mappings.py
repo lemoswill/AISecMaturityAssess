@@ -3,6 +3,19 @@ import modules.data as data
 # Framework Mappings Logic
 # Maps NIST AI RMF Categories to other standards.
 
+def get_control_info(control_id):
+    """
+    Retrieve text/description for a specific control ID.
+    Returns dict: {'text': ..., 'help': ...}
+    """
+    for func, subcats in data.ASSESSMENT_DATA.items():
+        for subcat_key, content in subcats.items():
+            controls = content.get('csa_controls', [])
+            for c in controls:
+                if c['id'] == control_id:
+                    return {'text': c.get('text', ''), 'help': c.get('help', '')}
+    return {'text': 'Control text not found', 'help': ''}
+
 def get_subcat_from_id(control_id):
     """
     Reverse lookup to find which NIST Subcategory a control belongs to.
